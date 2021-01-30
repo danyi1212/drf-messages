@@ -43,5 +43,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('demo/', include('demo.urls')),
+    path('messages/', include('drf_messages.urls')),
 ]
 
