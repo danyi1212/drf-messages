@@ -15,7 +15,7 @@ class ClearMessagesMiddleware:
         # delete all seen messages after request is done
         try:
             if request._messages.did_read:
-                Message.objects.with_context(request).filter(seen_at__isnull=False).delete()
+                Message.objects.with_context(request, update_seen=False).filter(seen_at__isnull=False).delete()
         except AttributeError:
             # _messages or did_read does not exists, probably some misconfiguration
             pass

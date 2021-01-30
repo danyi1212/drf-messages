@@ -11,7 +11,8 @@ class DBStorage(FallbackStorage):
     def _get(self, *args, **kwargs):
         # skip when is creating new messages
         if not self.added_new:
-            Message.objects.with_context(self.request).update(seen_at=timezone.now())
+            # update seen_at for all messages
+            Message.objects.with_context(self.request)
             # Mark that messages have been read
             self.did_read = True
 

@@ -1,30 +1,22 @@
 from django.contrib.messages.storage.base import LEVEL_TAGS
 from django.contrib.sessions.models import Session
 from django.db import models
+from django.utils import timezone
 from django.utils.functional import cached_property
 
 from drf_messages.conf import MESSAGES_MAX_LENGTH, MESSAGES_VIEW_MAX_LENGTH, MESSAGES_TAG_MAX_LENGTH
 
 
-class MessageQuerySet(models.QuerySet):
-
-    def with_context(self, request):
-        """
-        Filter only messages related for a request session.
-        """
-        return self.filter(session__session_key=request.session.session_key)
-
-
 class MessageManager(models.Manager):
 
-    def get_queryset(self):
-        return MessageQuerySet(self.model, using=self._db)
-
-    def with_context(self, request):
+    def with_context(self, request, update_seen=True):
         """
         Filter only messages related for a request session.
         """
-        return self.get_queryset().with_context(request)
+        queryset = self.get_queryset().filter(session__session_key=request.session.session_key)
+        if update_seen:
+            queryset.update(seen_at=timezone.now())
+        return queryset
 
 
 class MessageTag(models.Model):
