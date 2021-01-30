@@ -3,10 +3,7 @@ from django.contrib.sessions.models import Session
 from django.db import models
 from django.utils.functional import cached_property
 
-
-# TODO move to settings
-MESSAGES_MAX_LENGTH = 2048
-MESSAGES_TAG_MAX_LENGTH = 2048
+from drf_messages.conf import MESSAGES_MAX_LENGTH, MESSAGES_VIEW_MAX_LENGTH, MESSAGES_TAG_MAX_LENGTH
 
 
 class MessageQuerySet(models.QuerySet):
@@ -45,7 +42,8 @@ class MessageTag(models.Model):
 class Message(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="messages",
                                 help_text="The session where the message was submitted to.")
-    view = models.CharField(max_length=128, blank=True, help_text="The view where the message was submitted from.")
+    view = models.CharField(max_length=MESSAGES_VIEW_MAX_LENGTH, blank=True,
+                            help_text="The view where the message was submitted from.")
 
     message = models.CharField(max_length=MESSAGES_MAX_LENGTH, blank=True, help_text="The actual text of the message.")
     level = models.IntegerField(help_text="An integer describing the type of the message.")
