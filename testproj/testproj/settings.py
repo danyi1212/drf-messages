@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.urls import reverse_lazy
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -126,3 +128,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SWAGGER_SETTINGS = {
+    'LOGIN_URL': reverse_lazy('admin:login'),
+    'LOGOUT_URL': '/admin/logout/',
+    'SECURITY_DEFINITIONS': {
+        'Basic': {
+            'type': 'basic'
+        },
+    },
+}
+
+MESSAGE_STORAGE = "drf_messages.storage.DBStorage"
