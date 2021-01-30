@@ -16,6 +16,9 @@ class MessageManager(models.Manager):
         queryset = self.get_queryset().filter(session__session_key=request.session.session_key)
         if update_seen:
             queryset.update(seen_at=timezone.now())
+            # Mark that messages have been read
+            request._messages.did_read = True
+
         return queryset
 
 

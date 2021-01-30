@@ -1,6 +1,5 @@
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.models import Session
-from django.utils import timezone
 
 from drf_messages.models import Message, MessageTag
 
@@ -12,9 +11,7 @@ class DBStorage(FallbackStorage):
         # skip when is creating new messages
         if not self.added_new:
             # update seen_at for all messages
-            Message.objects.with_context(self.request)
-            # Mark that messages have been read
-            self.did_read = True
+            Message.objects.with_context(self.request, update_seen=True)
 
         return super(DBStorage, self)._get(*args, **kwargs)
 
