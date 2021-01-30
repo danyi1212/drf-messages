@@ -1,23 +1,62 @@
-from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.messages.storage.base import BaseStorage
 from django.contrib.sessions.models import Session
+from django.contrib.messages.storage.base import Message as DjangoMessage
 
+from drf_messages.conf import MESSAGES_DELETE_SEEN
 from drf_messages.models import Message, MessageTag
 
 
-class DBStorage(FallbackStorage):
-    did_read = False
+class DBStorage(BaseStorage):
+
+    def get_queryset(self):
+        """
+        Get queryset of all messages for that request session.
+        :return: MessageQuerySet object
+        """
+        return Message.objects.with_context(self.request)
+
+    def get_unread_queryset(self):
+        """
+        Get queryset of unread messages for that request session.
+        :return: MessageQuerySet object
+        """
+        return self.get_queryset().filter(seen_at__isnull=True)
+
+    def __iter__(self):
+        # parse to Django original Message objects
+        for message in self.get_unread_queryset():
+            yield DjangoMessage(
+                level=message.level,
+                message=message.message,
+                extra_tags=str(list(message.extra_tags.values_list("text", flat=True)))
+            )
+
+        # update last seen
+        self.get_queryset().mark_seen()
+
+    def __contains__(self, item: DjangoMessage):
+        return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
+
+    def __len__(self):
+        return self.get_unread_queryset().count()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.get_queryset().mark_seen()
+
+    def _store(self, messages, response, *args, **kwargs):
+        # messages are save on-demand when is created
+        return []
 
     def _get(self, *args, **kwargs):
-        # skip when is creating new messages
-        if not self.added_new:
-            # update seen_at for all messages
-            Message.objects.with_context(self.request, update_seen=True)
-
-        return super(DBStorage, self)._get(*args, **kwargs)
+        return list(self.__iter__()), True
 
     def add(self, level: int, message: str, extra_tags=''):
         # only if there is an active session
-        if self.request.session.session_key:
+        if message and int(level) >= self.level and self.request.session.session_key:
+            self.added_new = True
             message_obj = Message.objects.create(
                 session=Session.objects.get(session_key=self.request.session.session_key),
                 view=self.request.resolver_match.view_name,
@@ -33,4 +72,7 @@ class DBStorage(FallbackStorage):
             elif extra_tags:
                 MessageTag.objects.create(message=message_obj, text=str(extra_tags))
 
-        return super(DBStorage, self).add(level, message, extra_tags=extra_tags)
+    def update(self, response):
+        # delete already seen messages
+        if MESSAGES_DELETE_SEEN and self.used:
+            self.get_queryset().filter(seen_at__isnull=False).delete()

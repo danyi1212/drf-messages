@@ -1,3 +1,4 @@
+from django.contrib.messages import get_messages
 from django.contrib.messages.storage.base import LEVEL_TAGS
 from django.contrib.sessions.models import Session
 from django.db import models
@@ -5,19 +6,40 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 
+class MessageQuerySet(models.QuerySet):
+
+    def __init__(self, model=None, query=None, using=None, hints=None, request_context=None):
+        super(MessageQuerySet, self).__init__(model=model, query=query, using=using, hints=hints)
+        self.request_context = request_context
+
+    def _clone(self):
+        # pass request context on clone
+        c = super(MessageQuerySet, self)._clone()
+        c.request_context = self.request_context
+        return c
+
+    def mark_seen(self):
+        """
+        Mark any unread messages as seen now.
+        :return: Number of messages updated
+        """
+        # mark that messages have been read from the request
+        result = self.filter(seen_at__isnull=True).update(seen_at=timezone.now())
+        if result > 0 and self.request_context:
+            storage = get_messages(self.request_context)
+            if storage is not None:
+                storage.used = True
+        return result
+
+
 class MessageManager(models.Manager):
 
-    def with_context(self, request, update_seen=True):
+    def with_context(self, request):
         """
         Filter only messages related for a request session.
         """
-        queryset = self.get_queryset().filter(session__session_key=request.session.session_key)
-        if update_seen:
-            queryset.update(seen_at=timezone.now())
-            # Mark that messages have been read
-            request._messages.did_read = True
-
-        return queryset
+        return MessageQuerySet(self.model, using=self._db, request_context=request).filter(
+            session__session_key=request.session.session_key)
 
 
 class MessageTag(models.Model):
