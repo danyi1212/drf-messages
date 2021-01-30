@@ -4,8 +4,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from drf_messages.conf import MESSAGES_MAX_LENGTH, MESSAGES_VIEW_MAX_LENGTH, MESSAGES_TAG_MAX_LENGTH
-
 
 class MessageManager(models.Manager):
 
@@ -25,7 +23,7 @@ class MessageManager(models.Manager):
 class MessageTag(models.Model):
     message = models.ForeignKey("drf_messages.Message", on_delete=models.CASCADE, related_name="extra_tags")
 
-    text = models.CharField(max_length=MESSAGES_TAG_MAX_LENGTH, help_text="Custom tags for the message.")
+    text = models.CharField(max_length=128, help_text="Custom tags for the message.")
 
     def __str__(self):
         return self.text
@@ -37,10 +35,10 @@ class MessageTag(models.Model):
 class Message(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="messages",
                                 help_text="The session where the message was submitted to.")
-    view = models.CharField(max_length=MESSAGES_VIEW_MAX_LENGTH, blank=True,
+    view = models.CharField(max_length=64, blank=True,
                             help_text="The view where the message was submitted from.")
 
-    message = models.CharField(max_length=MESSAGES_MAX_LENGTH, blank=True, help_text="The actual text of the message.")
+    message = models.CharField(max_length=1024, blank=True, help_text="The actual text of the message.")
     level = models.IntegerField(help_text="An integer describing the type of the message.")
 
     seen_at = models.DateTimeField(blank=True, null=True, default=None, help_text="When the message was seen.")

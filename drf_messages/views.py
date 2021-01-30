@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 
+from drf_messages.conf import MESSAGES_DELETE_UNREAD
 from drf_messages.models import Message
 from drf_messages.serializers import MessageSerializer
 
@@ -21,5 +22,5 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
     def check_object_permissions(self, request, obj):
         super(MessagesViewSet, self).check_object_permissions(request, obj)
         # restrict deletion of unread messages.
-        if self.action == "destroy" and obj.seen_at is None:
+        if not MESSAGES_DELETE_UNREAD and self.action == "destroy" and obj.seen_at is None:
             raise PermissionDenied("Unread messages cannot be deleted.")
