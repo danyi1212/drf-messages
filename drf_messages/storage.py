@@ -6,11 +6,14 @@ from drf_messages.models import Message, MessageTag
 
 
 class DBStorage(FallbackStorage):
+    did_read = False
 
     def _get(self, *args, **kwargs):
         # skip when is creating new messages
         if not self.added_new:
             Message.objects.with_context(self.request).update(seen_at=timezone.now())
+            # Mark that messages have been read
+            self.did_read = True
 
         return super(DBStorage, self)._get(*args, **kwargs)
 

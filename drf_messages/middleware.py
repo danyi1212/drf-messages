@@ -13,5 +13,11 @@ class ClearMessagesMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         # delete all seen messages after request is done
-        Message.objects.with_context(request).filter(seen_at__isnull=False).delete()
+        try:
+            if request._messages.did_read:
+                Message.objects.with_context(request).filter(seen_at__isnull=False).delete()
+        except AttributeError:
+            # _messages or did_read does not exists, probably some misconfiguration
+            pass
+
         return response
