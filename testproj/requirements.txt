@@ -5,7 +5,8 @@ coreapi==2.3.3
 coreschema==0.0.4
 Django==3.1.5
 djangorestframework==3.12.2
--e ..
+# Editable Git install with no remote (drf-messages==0.0.1)
+-e c:\users\dan\pycharmprojects\drf-messages
 drf-yasg==1.20.0
 idna==2.10
 inflection==0.5.1
