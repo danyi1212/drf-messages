@@ -2,6 +2,7 @@ from django.contrib.messages.storage.base import BaseStorage
 from django.contrib.sessions.models import Session
 from django.contrib.messages.storage.base import Message as DjangoMessage
 
+from drf_messages import logger
 from drf_messages.conf import MESSAGES_DELETE_SEEN
 from drf_messages.models import Message, MessageTag
 
@@ -71,8 +72,17 @@ class DBStorage(BaseStorage):
                 ))
             elif extra_tags:
                 MessageTag.objects.create(message=message_obj, text=str(extra_tags))
+        else:
+            if not message:
+                logger.debug(f"Skip message creation due to an empty string. ({message})")
+            elif level < self.level:
+                logger.debug(f"Skip message creation due to the level being too low ({level} / {self.level}.")
+            else:
+                logger.warning(f"Unable to create a message from view \"{self.request.resolver_match.view_name}\" "
+                               f"because there no session in the request.")
 
     def update(self, response):
         # delete already seen messages
         if MESSAGES_DELETE_SEEN and self.used:
-            self.get_queryset().filter(seen_at__isnull=False).delete()
+            count, _ = self.get_queryset().filter(seen_at__isnull=False).delete()
+            logger.info(f"Cleared {count} messages for session {self.request.session}")

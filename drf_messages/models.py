@@ -5,6 +5,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 
+from drf_messages import logger
+
 
 class MessageQuerySet(models.QuerySet):
 
@@ -25,10 +27,14 @@ class MessageQuerySet(models.QuerySet):
         """
         # mark that messages have been read from the request
         result = self.filter(seen_at__isnull=True).update(seen_at=timezone.now())
+        logger.debug(f"Marked {result} messages as seen for session {self.request_context.session}")
         if result > 0 and self.request_context:
             storage = get_messages(self.request_context)
             if storage is not None:
                 storage.used = True
+            else:
+                logger.warning("Message storage is None. Make sure to include "
+                               "\"'django.contrib.messages.middleware.MessageMiddleware'\" in the MIDDLEWARE setting.")
         return result
 
 
