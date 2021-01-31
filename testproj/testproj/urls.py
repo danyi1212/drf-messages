@@ -15,6 +15,7 @@ Including another URLconf
 """
 from pathlib import Path
 
+import debug_toolbar
 from django.contrib import admin
 from django.urls import path, include, reverse_lazy
 from django.views.generic import RedirectView
@@ -41,6 +42,8 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('admin/', admin.site.urls),
+
+    path('__debug__/', include(debug_toolbar.urls)),
 
     path('demo/', include('demo.urls')),
     path('messages/', include('drf_messages.urls')),

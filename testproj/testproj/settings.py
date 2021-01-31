@@ -44,12 +44,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'drf_messages',
+    'debug_toolbar',
 
     # Project apps
     'demo',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -129,6 +131,34 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': "DEBUG",
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console',],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'drf_messages': {
+            'handlers': ['console',],
+            'level': 'DEBUG',
+            'formatter': 'simple',
+            'propagate': True,
+        },
+    },
+}
+
 SWAGGER_SETTINGS = {
     'LOGIN_URL': reverse_lazy('admin:login'),
     'LOGOUT_URL': '/admin/logout/',
@@ -137,6 +167,10 @@ SWAGGER_SETTINGS = {
             'type': 'basic'
         },
     },
+}
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda r: True,
 }
 
 MESSAGE_STORAGE = "drf_messages.storage.DBStorage"
