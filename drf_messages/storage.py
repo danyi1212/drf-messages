@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from django.contrib.messages.storage.base import BaseStorage
 from django.contrib.sessions.models import Session
 from django.contrib.messages.storage.base import Message as DjangoMessage
@@ -25,7 +27,7 @@ class DBStorage(BaseStorage):
 
     def __iter__(self):
         # parse to Django original Message objects
-        for message in self.get_unread_queryset():
+        for message in self.get_unread_queryset().prefetch_related("extra_tags"):
             yield DjangoMessage(
                 level=message.level,
                 message=message.message,
@@ -38,6 +40,7 @@ class DBStorage(BaseStorage):
     def __contains__(self, item: DjangoMessage):
         return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
 
+    @lru_cache
     def __len__(self):
         return self.get_unread_queryset().count()
 
