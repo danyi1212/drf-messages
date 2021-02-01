@@ -27,7 +27,7 @@ class MessageQuerySet(models.QuerySet):
         """
         # mark that messages have been read from the request
         result = self.filter(seen_at__isnull=True).update(seen_at=timezone.now())
-        logger.debug(f"Marked {result} messages as seen for session {self.request_context.session}")
+        logger.debug(f"Marked {result} messages as seen for session {self.request_context.session.session_key}")
         if result > 0 and self.request_context:
             storage = get_messages(self.request_context)
             if storage is not None:

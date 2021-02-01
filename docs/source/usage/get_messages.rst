@@ -19,7 +19,9 @@ Creating a new message is as straight forward as this:
 In this example, an information message is created for the session of that ``request`` object.
 
 .. warning::
-    If the request have **no session** provided, the message will not be created.
+    If the request have **no session** provided, the message will be stored in memory for **temporary storage**
+    available through the request processing.
+    Messages added that are not used until the response will not be available anymore.
 
 Extra tags can be attached to the message, as a string or list of strings.
 For example:
@@ -192,6 +194,14 @@ For example:
     with get_messages(request) as storage:
         queryset = storage.get_unread_queryset()
         # do something with the messages...
+
+.. note::
+    When **no session** is available in the request, the messages are saved in a **temporary storage** in memory and
+    can be accessed **only throughout the same request/response process**.
+
+    In this scenario, **only legacy interface** is available.
+    That means all queryset related features, such as ``get_queryset()``, ``get_unread_queryset()``, ``mark_seen()``
+    and the ``with`` operator will not do practically anything.
 
 Deleting messages
 ~~~~~~~~~~~~~~~~~

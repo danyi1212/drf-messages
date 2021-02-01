@@ -1,8 +1,7 @@
 from functools import lru_cache
 
-from django.contrib.messages.storage.base import BaseStorage
 from django.contrib.sessions.models import Session
-from django.contrib.messages.storage.base import Message as DjangoMessage
+from django.contrib.messages.storage.base import Message as DjangoMessage, BaseStorage
 
 from drf_messages import logger
 from drf_messages.conf import MESSAGES_DELETE_SEEN
@@ -10,6 +9,15 @@ from drf_messages.models import Message, MessageTag
 
 
 class DBStorage(BaseStorage):
+    """
+    Message storage backend to persistent messages storage in the database, with relation to the request's session.
+    When no session is provided, it fallbacks to a temporary storage in memory.
+    """
+
+    def __init__(self, request, *args, **kwargs):
+        super(DBStorage, self).__init__(request, *args, **kwargs)
+        # fallback to non persistent message storage when no session is available
+        self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
 
     def get_queryset(self):
         """
@@ -26,23 +34,33 @@ class DBStorage(BaseStorage):
         return self.get_queryset().filter(seen_at__isnull=True)
 
     def __iter__(self):
-        # parse to Django original Message objects
-        for message in self.get_unread_queryset().prefetch_related("extra_tags"):
-            yield DjangoMessage(
-                level=message.level,
-                message=message.message,
-                extra_tags=str(list(message.extra_tags.values_list("text", flat=True)))
-            )
+        if self._fallback:
+            self.used = True
+            yield from self._queued_messages
+        else:
+            # parse to Django original Message objects
+            for message in self.get_unread_queryset().prefetch_related("extra_tags"):
+                yield DjangoMessage(
+                    level=message.level,
+                    message=message.message,
+                    extra_tags=str(list(message.extra_tags.values_list("text", flat=True)))
+                )
 
-        # update last seen
-        self.get_queryset().mark_seen()
+            # update last seen
+            self.get_queryset().mark_seen()
 
     def __contains__(self, item: DjangoMessage):
-        return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
+        if self._fallback:
+            return item in self._queued_messages
+        else:
+            return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
 
     @lru_cache
     def __len__(self):
-        return self.get_unread_queryset().count()
+        if self._fallback:
+            return len(self._queued_messages)
+        else:
+            return self.get_unread_queryset().count()
 
     def __enter__(self):
         return self
@@ -55,37 +73,48 @@ class DBStorage(BaseStorage):
         return []
 
     def _get(self, *args, **kwargs):
-        return list(self.__iter__()), True
+        if self._fallback:
+            # avoid potential infinite loop, as the super method of __iter__ calls _get itself.
+            return [], True
+        else:
+            return list(self.__iter__()), True
 
     def add(self, level: int, message: str, extra_tags=''):
-        # only if there is an active session
-        if message and int(level) >= self.level and self.request.session.session_key:
-            self.added_new = True
-            message_obj = Message.objects.create(
-                session=Session.objects.get(session_key=self.request.session.session_key),
-                view=self.request.resolver_match.view_name,
-                message=message,
-                level=level,
-            )
-            # create extra tags
-            if isinstance(extra_tags, (list, tuple, set)):
-                MessageTag.objects.bulk_create((
-                    MessageTag(message=message_obj, text=tag)
-                    for tag in extra_tags
-                ))
-            elif extra_tags:
-                MessageTag.objects.create(message=message_obj, text=str(extra_tags))
+        if self._fallback:
+            # save messaged to temporary storage in memory
+            self._queued_messages.append(DjangoMessage(level, message, extra_tags=extra_tags))
         else:
-            if not message:
-                logger.debug(f"Skip message creation due to an empty string. ({message})")
-            elif level < self.level:
-                logger.debug(f"Skip message creation due to the level being too low ({level} / {self.level}.")
+            if message and int(level) >= self.level:
+                message_obj = Message.objects.create(
+                    session=Session.objects.get(session_key=self.request.session.session_key),
+                    view=self.request.resolver_match.view_name,
+                    message=message,
+                    level=level,
+                )
+                # create extra tags
+                if isinstance(extra_tags, (list, tuple, set)):
+                    MessageTag.objects.bulk_create((
+                        MessageTag(message=message_obj, text=tag)
+                        for tag in extra_tags
+                    ))
+                elif extra_tags:
+                    MessageTag.objects.create(message=message_obj, text=str(extra_tags))
             else:
-                logger.warning(f"Unable to create a message from view \"{self.request.resolver_match.view_name}\" "
-                               f"because there no session in the request.")
+                if not message:
+                    logger.debug(f"Skip message creation due to an empty string. ({message})")
+                elif level < self.level:
+                    logger.debug(f"Skip message creation due to the level being too low ({level} / {self.level}.")
 
     def update(self, response):
         # delete already seen messages
-        if MESSAGES_DELETE_SEEN and self.used:
+        if MESSAGES_DELETE_SEEN and self.used and not self._fallback:
             count, _ = self.get_queryset().filter(seen_at__isnull=False).delete()
             logger.info(f"Cleared {count} messages for session {self.request.session}")
+
+    def __str__(self):
+        messages = [m.message for m in self.__iter__()]
+        self.used = False
+        return str(messages)
+
+    def __repr__(self):
+        return self.__str__()
