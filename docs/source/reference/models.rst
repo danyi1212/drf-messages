@@ -13,7 +13,7 @@ Fields:
 :level: Integer, describing the type of the message.
 :extra_tags.all: List, all related drf_messages.MessageTag objects.
 :view: String (up to 64), the view where the message was submitted from.
-:seen_at: Date (with time), when the message was seen (or null).
+:read_at: Date (with time), when the message was read (or null).
 :created: Date (with time), when the message was crated
 
 Properties:

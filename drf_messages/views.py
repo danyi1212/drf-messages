@@ -23,7 +23,7 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
     """
     serializer_class = MessageSerializer
     search_fields = ("message",)
-    ordering_fields = ("level", "seen_at", "created")
+    ordering_fields = ("level", "read_at", "created")
     filterset_class = get_filter_class()
 
     def get_queryset(self):
@@ -32,11 +32,11 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
     def check_object_permissions(self, request, obj):
         super(MessagesViewSet, self).check_object_permissions(request, obj)
         # restrict deletion of unread messages.
-        if not MESSAGES_ALLOW_DELETE_UNREAD and self.action == "destroy" and obj.seen_at is None:
+        if not MESSAGES_ALLOW_DELETE_UNREAD and self.action == "destroy" and obj.read_at is None:
             raise PermissionDenied("Unread messages cannot be deleted.")
 
     def list(self, request, *args, **kwargs):
         response = super(MessagesViewSet, self).list(request, *args, **kwargs)
-        # update last seen
-        self.get_queryset().mark_seen()
+        # update last read
+        self.get_queryset().mark_read()
         return response

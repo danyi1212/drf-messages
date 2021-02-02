@@ -20,14 +20,14 @@ class MessageQuerySet(models.QuerySet):
         c.request_context = self.request_context
         return c
 
-    def mark_seen(self):
+    def mark_read(self):
         """
-        Mark any unread messages as seen now.
+        Mark any unread messages as read now.
         :return: Number of messages updated
         """
         # mark that messages have been read from the request
-        result = self.filter(seen_at__isnull=True).update(seen_at=timezone.now())
-        logger.debug(f"Marked {result} messages as seen for session {self.request_context.session.session_key}")
+        result = self.filter(read_at__isnull=True).update(read_at=timezone.now())
+        logger.debug(f"Marked {result} messages as read for session {self.request_context.session.session_key}")
         if result > 0 and self.request_context:
             storage = get_messages(self.request_context)
             if storage is not None:
@@ -69,7 +69,7 @@ class Message(models.Model):
     message = models.CharField(max_length=1024, blank=True, help_text="The actual text of the message.")
     level = models.IntegerField(help_text="An integer describing the type of the message.")
 
-    seen_at = models.DateTimeField(blank=True, null=True, default=None, help_text="When the message was seen.")
+    read_at = models.DateTimeField(blank=True, null=True, default=None, help_text="When the message was read.")
 
     created = models.DateTimeField(auto_now_add=True)
 

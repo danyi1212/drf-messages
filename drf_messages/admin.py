@@ -22,8 +22,8 @@ class MessageTagInline(admin.StackedInline):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     form = MessageAdminForm
-    list_display = ("session", "message", "level_tag", "seen_at")
-    list_filter = ("created", "extra_tags", "level", "seen_at", "view", "session")
+    list_display = ("session", "message", "level_tag", "read_at")
+    list_filter = ("created", "extra_tags", "level", "read_at", "view", "session")
     readonly_fields = ("session", "created")
 
     inlines = (MessageTagInline,)

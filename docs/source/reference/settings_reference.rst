@@ -15,11 +15,11 @@ Setting this value to ``True`` will allow users to delete messages haven't alrea
     Users (or rather sessions) have access only to **their messages** only and cannot delete messages that are not their own
     regardless of this setting.
 
-MESSAGES_DELETE_SEEN
+MESSAGES_DELETE_READ
 ~~~~~~~~~~~~~~~~~~~~
 
 | Type ``bool``; Default to ``False``; Not Required.
-| Automatically delete seen messages.
+| Automatically delete read messages.
 
 When this setting is set to ``True`` each message will be **delete just after it is read**.
 This behavior is useful to minimize storage space used by the messages.

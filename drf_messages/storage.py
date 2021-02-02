@@ -4,7 +4,7 @@ from django.contrib.sessions.models import Session
 from django.contrib.messages.storage.base import Message as DjangoMessage, BaseStorage
 
 from drf_messages import logger
-from drf_messages.conf import MESSAGES_DELETE_SEEN
+from drf_messages.conf import MESSAGES_DELETE_READ
 from drf_messages.models import Message, MessageTag
 
 
@@ -31,7 +31,7 @@ class DBStorage(BaseStorage):
         Get queryset of unread messages for that request session.
         :return: MessageQuerySet object
         """
-        return self.get_queryset().filter(seen_at__isnull=True)
+        return self.get_queryset().filter(read_at__isnull=True)
 
     def __iter__(self):
         if self._fallback:
@@ -46,8 +46,8 @@ class DBStorage(BaseStorage):
                     extra_tags=str(list(message.extra_tags.values_list("text", flat=True)))
                 )
 
-            # update last seen
-            self.get_queryset().mark_seen()
+            # update last read
+            self.get_queryset().mark_read()
 
     def __contains__(self, item: DjangoMessage):
         if self._fallback:
@@ -66,7 +66,7 @@ class DBStorage(BaseStorage):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.get_queryset().mark_seen()
+        self.get_queryset().mark_read()
 
     def _store(self, messages, response, *args, **kwargs):
         # messages are save on-demand when is created
@@ -106,9 +106,9 @@ class DBStorage(BaseStorage):
                     logger.debug(f"Skip message creation due to the level being too low ({level} / {self.level}.")
 
     def update(self, response):
-        # delete already seen messages
-        if MESSAGES_DELETE_SEEN and self.used and not self._fallback:
-            count, _ = self.get_queryset().filter(seen_at__isnull=False).delete()
+        # delete already read messages
+        if MESSAGES_DELETE_READ and self.used and not self._fallback:
+            count, _ = self.get_queryset().filter(read_at__isnull=False).delete()
             logger.info(f"Cleared {count} messages for session {self.request.session}")
 
     def __str__(self):

@@ -59,6 +59,6 @@ Special methods
 
 :__contains__: Checks if there is an unread message with same text and level for that request session.
 :__len__: Count of unread message for that request session.
-:__iter__: Iterate over django's message framework's Message objects (messages are marked as seen).
+:__iter__: Iterate over django's message framework's Message objects (messages are marked as read).
 :__enter__: Returns self.
 :__exit__: Marks all unread messages as read now.

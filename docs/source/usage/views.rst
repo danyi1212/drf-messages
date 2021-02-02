@@ -4,7 +4,7 @@ Rest API Views
 
 Provided with this app is a DRF ViewSet that provides clients to access messages for their session.
 
-Through those endpoints, clients can **list** all of their messages (seen and unseen), **retrieve** a single message,
+Through those endpoints, clients can **list** all of their messages (read and unread), **retrieve** a single message,
 and **delete** a message.
 
 Endpoints
@@ -29,7 +29,7 @@ Endpoints
     $ curl -X DELETE "http://127.0.0.1/messages/{id}/"
 
 .. note::
-    By default, clients are **not allowed** to delete messages that are unseen.
+    By default, clients are **not allowed** to delete messages that are unread.
     You can change this behavior by setting the ``MESSAGES_ALLOW_DELETE_UNREAD`` to ``True`` in your project's settings.
 
 List Filters
@@ -62,7 +62,7 @@ The filters included are:
 :level: Integer Filter, show messages filtered by level (with integer lookups).
 :extra_tags: Text Filter, messages with specific extra tag (with text lookups).
 :view: Text Filter, messages from specific view.
-:seen_before/after: Date & Time Filter, message seen between date and time range.
+:read_before/after: Date & Time Filter, message read between date and time range.
 :created_before/after: Date & Time Filter, message created between date and time range.
 
 Customize the views

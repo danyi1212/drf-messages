@@ -146,12 +146,12 @@ Another classic way is iterating over the messages storage:
 
 
 .. note::
-    When using the traditional interface specified above, all messages will be **marked as seen** immediately.
+    When using the traditional interface specified above, all messages will be **marked as read** immediately.
 
 Alternatively, this module provides a **QuerySet access** to the messages.
 
-It includes **extra information** in the messages, like ``created``, ``seen_at`` and ``view`` to specify the creation time,
-when seen (or null if unseen), and the view who submitted the message respectively.
+It includes **extra information** in the messages, like ``created``, ``read_at`` and ``view`` to specify the creation time,
+when read (or null if unread), and the view who submitted the message respectively.
 Using the QuerySet you will have all it's features like filtering, aggregations, etc.
 
 This can be access through the storage, for example:
@@ -168,7 +168,7 @@ This can be access through the storage, for example:
 .. warning::
     When using the queryset interface, it is important to **mark as seem** all queried messages after use.
 
-After every access, you will probably want to **mark those messages as seen** in order to allow them to be cleared from the database.
+After every access, you will probably want to **mark those messages as read** in order to allow them to be cleared from the database.
 
 This can be done manually like so:
 
@@ -180,9 +180,9 @@ This can be done manually like so:
     storage = get_messages(request)
     queryset = storage.get_unread_queryset()
     # do something with the messages...
-    queryset.mark_seen()
+    queryset.mark_read()
 
-Alternatively, you can use the ``with`` operator on the storage to mark all messages as seen on block exit.
+Alternatively, you can use the ``with`` operator on the storage to mark all messages as read on block exit.
 For example:
 
 .. code-block:: python
@@ -200,7 +200,7 @@ For example:
     can be accessed **only throughout the same request/response process**.
 
     In this scenario, **only legacy interface** is available.
-    That means all queryset related features, such as ``get_queryset()``, ``get_unread_queryset()``, ``mark_seen()``
+    That means all queryset related features, such as ``get_queryset()``, ``get_unread_queryset()``, ``mark_read()``
     and the ``with`` operator will not do practically anything.
 
 Deleting messages
@@ -212,14 +212,14 @@ By default, messages get cleared automatically only when the **appropriate sessi
 due to user logout or ``clearsessions`` command.
 
 Most of the time this configuration is enough.
-It allows for accessing already seen messages, yet usually does not result in too much messages being stored.
+It allows for accessing already read messages, yet usually does not result in too much messages being stored.
 
 .. note::
     Make sure to regularly run the ``clearsessions`` command to delete any expired session and clear stale messages.
     See more at the django docs https://docs.djangoproject.com/en/3.1/topics/http/sessions/#clearing-the-session-store
 
-Additionally, you may want to configure the ``MESSAGE_DELETE_SEEN`` setting to ``True`` at your project's ``settings.py`` file.
-This setting will cause any seen message to be **deleted just after the request is done processing**.
+Additionally, you may want to configure the ``MESSAGE_DELETE_READ`` setting to ``True`` at your project's ``settings.py`` file.
+This setting will cause any read message to be **deleted just after the request is done processing**.
 
 Another way is to **delete messages manually** in you code.
 This can be done using the QuerySet interface to messages:
@@ -232,7 +232,7 @@ This can be done using the QuerySet interface to messages:
     storage = get_messages(request)
     queryset = storage.get_queryset()
     # delete only messages that have already been read
-    queryset.filter(seen_at__isnull=False).delete()
+    queryset.filter(read_at__isnull=False).delete()
 
 .. note::
     Make sure not to delete unread messages before the user gets a chance or getting them...

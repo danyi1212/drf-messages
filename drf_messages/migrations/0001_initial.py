@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('view', models.CharField(blank=True, help_text='The view where the message was submitted from.', max_length=64)),
                 ('message', models.CharField(blank=True, help_text='The actual text of the message.', max_length=1024)),
                 ('level', models.IntegerField(help_text='An integer describing the type of the message.')),
-                ('seen_at', models.DateTimeField(blank=True, default=None, help_text='When the message was seen.', null=True)),
+                ('read_at', models.DateTimeField(blank=True, default=None, help_text='When the message was read.', null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('session', models.ForeignKey(help_text='The session where the message was submitted to.', on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='sessions.session')),
             ],
