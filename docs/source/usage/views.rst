@@ -10,19 +10,19 @@ and **delete** a message.
 Endpoints
 ---------
 
-:list: GET - List all messages for this session. (``messages:list``)
+:list: GET - List all messages for this session. (``drf_messages:messages-list``)
 
 .. code-block::
 
     $ curl -X GET "http://127.0.0.1/messages/"
 
-:retrieve: GET - Retrieve specific message from this session. (``messages:retrieve``)
+:retrieve: GET - Retrieve specific message from this session. (``drf_messages:messages-detail``)
 
 .. code-block::
 
     $ curl -X GET "http://127.0.0.1/messages/{id}/"
 
-:delete: DELETE - Delete a specific message from this session. (``messages:delete``)
+:delete: DELETE - Delete a specific message from this session. (``drf_messages:messages-detail``)
 
 .. code-block::
 
