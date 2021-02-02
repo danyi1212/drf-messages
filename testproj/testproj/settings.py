@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'drf_messages',
     'debug_toolbar',
+    'django_filters',
 
     # Project apps
     'demo',
@@ -160,6 +161,24 @@ LOGGING = {
     },
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
+}
+
 SWAGGER_SETTINGS = {
     'LOGIN_URL': reverse_lazy('admin:login'),
     'LOGOUT_URL': '/admin/logout/',
@@ -170,8 +189,8 @@ SWAGGER_SETTINGS = {
     },
 }
 
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": lambda r: True,
-}
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 MESSAGE_STORAGE = "drf_messages.storage.DBStorage"

@@ -32,6 +32,39 @@ Endpoints
     By default, clients are **not allowed** to delete messages that are unseen.
     You can change this behavior by setting the ``MESSAGES_ALLOW_DELETE_UNREAD`` to ``True`` in your project's settings.
 
+List Filters
+------------
+
+This module includes a predefined ``django-filter`` FilterSet.
+To use it, simply install ``django-filter`` in your project and the filters will be added automatically.
+
+Install using pip with::
+
+$ pip install django-filter
+
+Then add 'django_filters' to your INSTALLED_APPS:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        # ...
+        'django_filters',
+        # ...
+    ]
+
+.. seealso::
+    To install properly, follow the installation docs at https://django-filter.readthedocs.io/en/stable/guide/install.html
+
+The filters included are:
+
+:unread: Boolean Filter *(true/false)*, show new messages, and vice versa.
+:level_tag: Text Filter, minimum message level to show (similar to Python logging handler level).
+:level: Integer Filter, show messages filtered by level (with integer lookups).
+:extra_tags: Text Filter, messages with specific extra tag (with text lookups).
+:view: Text Filter, messages from specific view.
+:seen_before/after: Date & Time Filter, message seen between date and time range.
+:created_before/after: Date & Time Filter, message created between date and time range.
+
 Customize the views
 -------------------
 

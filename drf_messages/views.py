@@ -6,6 +6,14 @@ from drf_messages.conf import MESSAGES_ALLOW_DELETE_UNREAD
 from drf_messages.serializers import MessageSerializer
 
 
+def get_filter_class():
+    try:
+        from drf_messages.filters import MessageFilterSet
+        return MessageFilterSet
+    except ImportError:
+        return
+
+
 class MessagesViewSet(viewsets.mixins.ListModelMixin,
                       viewsets.mixins.RetrieveModelMixin,
                       viewsets.mixins.DestroyModelMixin,
@@ -14,6 +22,9 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
     List, Retrieve and Delete messages for this session.
     """
     serializer_class = MessageSerializer
+    search_fields = ("message",)
+    ordering_fields = ("level", "seen_at", "created")
+    filterset_class = get_filter_class()
 
     def get_queryset(self):
         return get_messages(self.request).get_queryset()

@@ -74,7 +74,7 @@ You can list all your messages with::
 $ curl -X GET "http://localhost/messages/"
 
 Any unseen messages will have ``seen_at`` as ``null``.
-If you have ``django-filter`` configured, you can also query "http://localhost/messages/?seen_at=null" to get only new messages.
+If you have ``django-filter`` configured, you can also query "http://localhost/messages/?unread=true" to get only unread messages.
 
 Getting help
 ------------

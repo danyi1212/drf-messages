@@ -26,10 +26,20 @@ Install using pip with::
 
 $ pip install djangorestframework
 
-If you are only planning to use the persistent storage and do not need the provided view, you can skip the installation of Django Rest Framework.
+If you are only planning to use the persistent storage and do not need the provided view,
+you can skip the installation of Django Rest Framework.
 
 .. seealso::
     To install it properly visit the installation docs at https://www.django-rest-framework.org/#installation
+
+It is also recommended to also install ``django-filter`` to enable the included list filters for the views.
+See more information in the :doc:`../usage/views` docs.
+
+Install using pip with::
+
+$ pip install django-filter
+
+To install properly, follow the installation docs at https://django-filter.readthedocs.io/en/stable/guide/install.html
 
 Installing
 ----------
@@ -43,6 +53,7 @@ First, you will need to add the ``drf_message`` application to the ``INSTALLED_A
         'django.contrib.sessions',
         'django.contrib.messages',
         'rest_framework',  # optional
+        'django_filters',  # optional
         'drf_messages',
         # ...
     ]
