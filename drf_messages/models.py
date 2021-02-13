@@ -49,7 +49,9 @@ class MessageManager(models.Manager):
         When MESSAGES_USE_SESSIONS, messages for that session or without a session specified,
         otherwise messages from all sessions.
         """
-        queryset = MessageQuerySet(self.model, using=self._db, request_context=request).filter(user=request.user)
+        queryset = MessageQuerySet(self.model, using=self._db, request_context=request).filter(
+            user=request.user if hasattr(request, "user") and request.user.is_authenticated else None
+        )
         if MESSAGES_USE_SESSIONS:
             return queryset.filter(Q(session__session_key=request.session.session_key) | Q(session__isnull=True))
         else:
@@ -79,10 +81,15 @@ class MessageManager(models.Manager):
         :param extra_tags: One or more tags to attach to the message.
         :return: Message object.
         """
+        # extract session
+        if hasattr(request, "session") and request.session.session_key:
+            session = Session.objects.get(session_key=request.session.session_key)
+        else:
+            session = None
         # create message
         message_obj = self.create(
             user=request.user,
-            session=Session.objects.get(session_key=request.session.session_key) if request.session else None,
+            session=session,
             view=request.resolver_match.view_name if request.resolver_match else '',
             message=message,
             level=level,

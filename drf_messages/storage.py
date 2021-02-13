@@ -19,7 +19,7 @@ class DBStorage(BaseStorage):
         if MESSAGES_USE_SESSIONS:
             self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
         else:
-            self._fallback = not bool(hasattr(request, "user") and request.user)
+            self._fallback = not bool(hasattr(request, "user") and request.user.is_authenticated)
 
     def get_queryset(self):
         """
