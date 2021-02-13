@@ -1,7 +1,18 @@
 drf-messages
 ============
 
-**Use Django's Messages Framework with Django Rest Framework project.**
+.. image:: https://readthedocs.org/projects/drf-messages/badge/?version=latest
+    :target: https://drf-messages.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://img.shields.io/badge/Maintained-yes-green.svg
+    :target: https://github.com/danyi1212/drf-messages/graphs/commit-activity
+    :alt: Maintained
+
+.. image:: https://static.pepy.tech/personalized-badge/drf-messages?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads&service=github
+    :target: https://pepy.tech/project/drf-messages
+
+**Use Django's Messages Framework with Django Rest Framework.**
 
 | Documentation is available at https://drf-messages.readthedocs.io/en/latest/
 | PyPI Package at https://pypi.org/project/drf-messages/
@@ -37,7 +48,6 @@ Quick Start
 2. Configure project ``settings.py``:
 
 .. code-block:: python
-    :emphasize-lines: 5, 9
 
     INSTALLED_APPS = [
         # ...

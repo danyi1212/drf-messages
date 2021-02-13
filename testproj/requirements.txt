@@ -2,12 +2,13 @@ alabaster==0.7.12
 asgiref==3.3.1
 Babel==2.9.0
 bleach==3.2.3
+build==0.2.1
 certifi==2020.12.5
 chardet==4.0.0
 colorama==0.4.4
 coreapi==2.3.3
 coreschema==0.0.4
-Django==3.1.5
+Django==3.1.6
 django-debug-toolbar==3.2
 django-filter==2.4.0
 djangorestframework==3.12.2
@@ -23,6 +24,7 @@ keyring==22.0.1
 livereload==2.6.3
 MarkupSafe==1.1.1
 packaging==20.9
+pep517==0.9.1
 pkginfo==1.7.0
 Pygments==2.7.4
 pyparsing==2.4.7
@@ -46,6 +48,7 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
 sqlparse==0.4.1
+toml==0.10.2
 tornado==6.1
 tqdm==4.56.0
 twine==3.3.0
