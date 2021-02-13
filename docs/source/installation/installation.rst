@@ -50,7 +50,8 @@ First, you will need to add the ``drf_message`` application to the ``INSTALLED_A
 
     INSTALLED_APPS = [
         # ...
-        'django.contrib.sessions',
+        'django.contrib.auth',
+        'django.contrib.sessions',  # optional
         'django.contrib.messages',
         'rest_framework',  # optional
         'django_filters',  # optional
@@ -60,18 +61,20 @@ First, you will need to add the ``drf_message`` application to the ``INSTALLED_A
 
 
 .. note::
-    Note that both of Django's ``messages`` and ``sessions`` contrib apps are required for this module.
-    Make sure to include them in your ``INSTALLED_APPS`` too:
+    Note that both of Django's ``messages`` and ``auth`` contrib apps are required for this module,
+    and the ``sessions`` is recommended.
+    Make sure to include them in your ``INSTALLED_APPS`` too.
 
-It is suggested to verify that both ``messages`` and ``sessions`` middlewares are installed.
+It is suggested to verify that both ``messages``, ``auth`` and ``sessions`` middlewares are installed.
 The configuration should look like so:
 
 .. code-block:: python
 
     MIDDLEWARE = [
         # ...
-        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',  # optional
         # ...
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         # ...
     ]

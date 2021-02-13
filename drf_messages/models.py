@@ -1,11 +1,14 @@
+from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.contrib.messages.storage.base import LEVEL_TAGS
 from django.contrib.sessions.models import Session
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.functional import cached_property
 
 from drf_messages import logger
+from drf_messages.conf import MESSAGES_USE_SESSIONS
 
 
 class MessageQuerySet(models.QuerySet):
@@ -42,10 +45,74 @@ class MessageManager(models.Manager):
 
     def with_context(self, request):
         """
-        Filter only messages related for a request session.
+        Filter only messages for a request context:
+        When MESSAGES_USE_SESSIONS, messages for that session or without a session specified,
+        otherwise messages from all sessions.
         """
-        return MessageQuerySet(self.model, using=self._db, request_context=request).filter(
-            session__session_key=request.session.session_key)
+        queryset = MessageQuerySet(self.model, using=self._db, request_context=request).filter(user=request.user)
+        if MESSAGES_USE_SESSIONS:
+            return queryset.filter(Q(session__session_key=request.session.session_key) | Q(session__isnull=True))
+        else:
+            return queryset
+
+    def _create_extra_tags(self, message, extra_tags):
+        """
+        Create message tags from list or string.
+        :param message: The message to attach the tags to.
+        :param extra_tags: String or List of string tags.
+        :return: None
+        """
+        if isinstance(extra_tags, (list, tuple, set)):
+            MessageTag.objects.bulk_create((
+                MessageTag(message=message, text=tag)
+                for tag in extra_tags
+            ))
+        else:
+            MessageTag.objects.create(message=message, text=str(extra_tags))
+
+    def create_message(self, request, message, level, extra_tags=None):
+        """
+        Create a new message to the database.
+        :param request: Request context.
+        :param message: Text body of the message.
+        :param level: Integer describing the type of the message.
+        :param extra_tags: One or more tags to attach to the message.
+        :return: Message object.
+        """
+        # create message
+        message_obj = self.create(
+            user=request.user,
+            session=Session.objects.get(session_key=request.session.session_key) if request.session else None,
+            view=request.resolver_match.view_name if request.resolver_match else '',
+            message=message,
+            level=level,
+        )
+        # create extra tags
+        if extra_tags:
+            self._create_extra_tags(message_obj, extra_tags)
+
+        return message_obj
+
+    def create_user_message(self, user, message, level, extra_tags=None):
+        """
+        Create a new message to the database.
+        :param user: User object (from settings.AUTH_USER_MODEL).
+        :param message: Text body of the message.
+        :param level: Integer describing the type of the message.
+        :param extra_tags: One or more tags to attach to the message.
+        :return: Message object.
+        """
+        # create message
+        message_obj = self.create(
+            user=user,
+            message=message,
+            level=level,
+        )
+        # create extra tags
+        if extra_tags:
+            self._create_extra_tags(message_obj, extra_tags)
+
+        return message_obj
 
 
 class MessageTag(models.Model):
@@ -61,9 +128,10 @@ class MessageTag(models.Model):
 
 
 class Message(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="messages",
-                                help_text="The session where the message was submitted to.")
-    view = models.CharField(max_length=64, blank=True,
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="messages")
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True, default=None,
+                                related_name="messages", help_text="The session where the message was submitted to.")
+    view = models.CharField(max_length=64, blank=True, default="",
                             help_text="The view where the message was submitted from.")
 
     message = models.CharField(max_length=1024, blank=True, help_text="The actual text of the message.")

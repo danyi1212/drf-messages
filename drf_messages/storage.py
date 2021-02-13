@@ -1,11 +1,10 @@
 from functools import lru_cache
 
-from django.contrib.sessions.models import Session
 from django.contrib.messages.storage.base import Message as DjangoMessage, BaseStorage
 
 from drf_messages import logger
-from drf_messages.conf import MESSAGES_DELETE_READ
-from drf_messages.models import Message, MessageTag
+from drf_messages.conf import MESSAGES_DELETE_READ, MESSAGES_USE_SESSIONS
+from drf_messages.models import Message
 
 
 class DBStorage(BaseStorage):
@@ -17,7 +16,10 @@ class DBStorage(BaseStorage):
     def __init__(self, request, *args, **kwargs):
         super(DBStorage, self).__init__(request, *args, **kwargs)
         # fallback to non persistent message storage when no session is available
-        self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
+        if MESSAGES_USE_SESSIONS:
+            self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
+        else:
+            self._fallback = not bool(hasattr(request, "user") and request.user)
 
     def get_queryset(self):
         """
@@ -85,20 +87,7 @@ class DBStorage(BaseStorage):
             self._queued_messages.append(DjangoMessage(level, message, extra_tags=extra_tags))
         else:
             if message and int(level) >= self.level:
-                message_obj = Message.objects.create(
-                    session=Session.objects.get(session_key=self.request.session.session_key),
-                    view=self.request.resolver_match.view_name,
-                    message=message,
-                    level=level,
-                )
-                # create extra tags
-                if isinstance(extra_tags, (list, tuple, set)):
-                    MessageTag.objects.bulk_create((
-                        MessageTag(message=message_obj, text=tag)
-                        for tag in extra_tags
-                    ))
-                elif extra_tags:
-                    MessageTag.objects.create(message=message_obj, text=str(extra_tags))
+                Message.objects.create_message(self.request, message, level, extra_tags=extra_tags)
             else:
                 if not message:
                     logger.debug(f"Skip message creation due to an empty string. ({message})")

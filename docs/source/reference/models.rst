@@ -29,3 +29,25 @@ Fields:
 :id: Integer, ID.
 :message: Message, related drf_messages.Message object.
 :text: String (up to 128), custom tags for the message.
+
+
+MessageManager
+--------------
+
+Accessed via ``Message.objects``.
+
+Methods:
+
+:create_message(request, message, level, extra_tags): Create a new message in database.
+:create_user_message(request, message, level, extra_tags): Create a new message in database for a user.
+:with_context(request): QuerySet of messages filtered to a request context.
+
+MessageQuerySet
+---------------
+
+Accessed via ``Message.objects.with_context(request)``.
+Alternative access via ``messages.get_messages(request).get_queryset()``.
+
+Methods:
+
+:mark_read(): Mark messages as read now.

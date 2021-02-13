@@ -2,6 +2,23 @@
 Settings
 --------
 
+MESSAGES_USE_SESSIONS
+~~~~~~~~~~~~~~~~~~~~~
+
+| Type ``bool``; Default to ``False``; Not Required.
+| Use session context to store messages.
+
+Store and query messages for current session only.
+When is set to ``True`` messages are added only to the current session, and is shown only to throughout the session.
+
+By default, messages are stored with user context.
+That means the user can see all their messages everywhere.
+
+.. note::
+    Using user context messages can **support authentication backends** other then ``SessionAuthentication``,
+    while session messages is better for showing messages **only where they are relevant** and
+    **automatic cleaning** stale messages as the session deletes on expire or logoff.
+
 MESSAGES_ALLOW_DELETE_UNREAD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

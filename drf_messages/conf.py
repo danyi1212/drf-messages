@@ -5,3 +5,5 @@ from django.conf import settings
 MESSAGES_ALLOW_DELETE_UNREAD: bool = getattr(settings, "MESSAGES_ALLOW_DELETE_UNREAD", False)
 # Automatically read all read messages after request
 MESSAGES_DELETE_READ: bool = getattr(settings, "MESSAGES_DELETE_READ", False)
+# Use request session for storing messages
+MESSAGES_USE_SESSIONS: bool = getattr(settings, "MESSAGES_USE_SESSIONS", False)

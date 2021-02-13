@@ -2,7 +2,7 @@
 Rest API Views
 =========
 
-Provided with this app is a DRF ViewSet that provides clients to access messages for their session.
+Provided with this app is a DRF ViewSet that provides clients to access their messages.
 
 Through those endpoints, clients can **list** all of their messages (read and unread), **retrieve** a single message,
 and **delete** a message.
@@ -10,19 +10,19 @@ and **delete** a message.
 Endpoints
 ---------
 
-:list: GET - List all messages for this session. (``drf_messages:messages-list``)
+:list: GET - List all messages for this context. (``drf_messages:messages-list``)
 
 .. code-block::
 
     $ curl -X GET "http://127.0.0.1/messages/"
 
-:retrieve: GET - Retrieve specific message from this session. (``drf_messages:messages-detail``)
+:retrieve: GET - Retrieve specific message from this context. (``drf_messages:messages-detail``)
 
 .. code-block::
 
     $ curl -X GET "http://127.0.0.1/messages/{id}/"
 
-:delete: DELETE - Delete a specific message from this session. (``drf_messages:messages-detail``)
+:delete: DELETE - Delete a specific message from this context. (``drf_messages:messages-detail``)
 
 .. code-block::
 
@@ -71,7 +71,8 @@ Customize the views
 Those views does not specify any permission classes, authentication classes, filters, pagination, versioning or any other optional extension.
 
 .. warning::
-    Users can access only the messages of their **current session**.
+    Users can access only **their messages** or the messages of their **current session**
+    when ``MESSAGES_USE_SESSIONS`` is configured to ``True``.
     Unauthenticated users can practically access the endpoints, but will always receive an empty list or error 404.
 
     Providing a permission class like ``IsAuthenticated`` is a good practice, but is not mandatory.

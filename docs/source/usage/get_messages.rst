@@ -16,11 +16,11 @@ Creating a new message is as straight forward as this:
 
     messages.info(request, 'Hello world!')
 
-In this example, an information message is created for the session of that ``request`` object.
+In this example, an information message is created for that ``request`` object.
 
 .. warning::
-    If the request have **no session** provided, the message will be stored in memory for **temporary storage**
-    available through the request processing.
+    In case the request has **no user or session** provided, the message will be stored in memory
+    for **temporary storage** available through that request processing.
     Messages added that are not used until the response will not be available anymore.
 
 Extra tags can be attached to the message, as a string or list of strings.
@@ -208,15 +208,18 @@ Deleting messages
 
 When using a persistent message storage, it is important to implement procedure for **clearing out** old messages.
 
-By default, messages get cleared automatically only when the **appropriate session is deleted** from database
+When using sessions, messages get cleared automatically only when the **appropriate session is deleted** from database
 due to user logout or ``clearsessions`` command.
 
-Most of the time this configuration is enough.
-It allows for accessing already read messages, yet usually does not result in too much messages being stored.
+This behavior is not affected by the ``MESSAGES_USE_SESSIONS`` setting.
+As long as there is a session provided with the request, all the messages will be cleared when the session is cleared.
 
 .. note::
     Make sure to regularly run the ``clearsessions`` command to delete any expired session and clear stale messages.
     See more at the django docs https://docs.djangoproject.com/en/3.1/topics/http/sessions/#clearing-the-session-store
+
+If you are **not using Session Authentication**, it is advised to setup a manual message clearing procedure,
+such as a scheduled deletion of all read messages created before a certain time.
 
 Additionally, you may want to configure the ``MESSAGE_DELETE_READ`` setting to ``True`` at your project's ``settings.py`` file.
 This setting will cause any read message to be **deleted just after the request is done processing**.

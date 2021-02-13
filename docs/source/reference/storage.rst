@@ -49,16 +49,16 @@ You may set to ``False`` to avoid the message deletion procedure.
 Methods
 ~~~~~~~
 
-:get_queryset(): Get queryset of all messages for that request session.
-:get_unread_queryset(): Get queryset of unread messages for that request session.
+:get_queryset(): Get queryset of all messages for that request.
+:get_unread_queryset(): Get queryset of unread messages for that request.
 :add(level, message, extra_args): Add a new message to the storage.
 :update(response): Perform deleting procedure manually.
 
 Special methods
 ~~~~~~~~~~~~~~~
 
-:__contains__: Checks if there is an unread message with same text and level for that request session.
-:__len__: Count of unread message for that request session.
+:__contains__: Checks if there is an unread message with same text and level for that request.
+:__len__: Count of unread message for that request.
 :__iter__: Iterate over django's message framework's Message objects (messages are marked as read).
 :__enter__: Returns self.
 :__exit__: Marks all unread messages as read now.
