@@ -73,6 +73,26 @@ class MessageDRFViewsTests(APITestCase):
         response = self.client.get(reverse("drf_messages:messages-list"))
         self.assertEqual(response.data.get("results")[0].get("message"), text)
 
+    def test_peak_messages(self):
+        self.login_session()
+        # create message
+        response = self.client.get(reverse('demo:index'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # peek messages
+        response = self.client.get(reverse('drf_messages:messages-peek'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get("count"), 1)
+        self.assertEqual(response.data.get("max_level"), 20)
+        self.assertEqual(response.data.get("max_level_tag"), "info")
+        # create higher level message
+        Message.objects.create_user_message(self.user, "", messages.WARNING)
+        # peek again
+        response = self.client.get(reverse('drf_messages:messages-peek'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get("count"), 2)
+        self.assertEqual(response.data.get("max_level"), 30)
+        self.assertEqual(response.data.get("max_level_tag"), "warning")
+
 
 class MessageTests(TestCase):
 
