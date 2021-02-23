@@ -16,6 +16,12 @@ Endpoints
 
     $ curl -X GET "http://127.0.0.1/messages/"
 
+:peek: GET - Get summary of unread messages for this context. (``drf_messages:messages-peek``)
+
+.. code-block::
+
+    $ curl -X GET "http://127.0.0.1/messages/peek/"
+
 :retrieve: GET - Retrieve specific message from this context. (``drf_messages:messages-detail``)
 
 .. code-block::
