@@ -18,9 +18,9 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessagePeekSerializer(serializers.Serializer):
     count = serializers.IntegerField(read_only=True, help_text="Count of unread messages.")
     max_level = serializers.ChoiceField(read_only=True, choices=tuple(LEVEL_TAGS.items()),
-                                        help_text="Highest unread message level")
-    max_level_tag = serializers.ChoiceField(read_only=True, choices=tuple(LEVEL_TAGS.values()),
-                                            help_text="Highest unread message level tag")
+                                        help_text="Highest unread message level.")
+    max_level_tag = serializers.ChoiceField(read_only=True, choices=tuple(LEVEL_TAGS.values()), allow_blank=True,
+                                            help_text="Highest unread message level tag.")
 
     def update(self, instance, validated_data):
         raise ValidationError("Updating MessagePeek objects is not allowed.")
