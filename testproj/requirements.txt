@@ -19,7 +19,7 @@ idna==2.10
 imagesize==1.2.0
 inflection==0.5.1
 itypes==1.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 keyring==22.0.1
 livereload==2.6.3
 MarkupSafe==1.1.1
