@@ -57,7 +57,7 @@ class DBStorage(BaseStorage):
         else:
             return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
 
-    @lru_cache
+    @lru_cache()
     def __len__(self):
         if self._fallback:
             return len(self._queued_messages)
