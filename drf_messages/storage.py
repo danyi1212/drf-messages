@@ -3,7 +3,7 @@ from functools import lru_cache
 from django.contrib.messages.storage.base import Message as DjangoMessage, BaseStorage
 
 from drf_messages import logger
-from drf_messages.conf import MESSAGES_DELETE_READ, MESSAGES_USE_SESSIONS
+from drf_messages.conf import messages_settings
 from drf_messages.models import Message
 
 
@@ -16,7 +16,7 @@ class DBStorage(BaseStorage):
     def __init__(self, request, *args, **kwargs):
         super(DBStorage, self).__init__(request, *args, **kwargs)
         # fallback to non persistent message storage when no session is available
-        if MESSAGES_USE_SESSIONS:
+        if messages_settings.MESSAGES_USE_SESSIONS:
             self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
         else:
             self._fallback = not bool(hasattr(request, "user") and request.user.is_authenticated)
@@ -96,7 +96,7 @@ class DBStorage(BaseStorage):
 
     def update(self, response):
         # delete already read messages
-        if MESSAGES_DELETE_READ and self.used and not self._fallback:
+        if messages_settings.MESSAGES_DELETE_READ and self.used and not self._fallback:
             count, _ = self.get_queryset().filter(read_at__isnull=False).delete()
             logger.info(f"Cleared {count} messages for session {self.request.session}")
 
