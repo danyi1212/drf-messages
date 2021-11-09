@@ -16,6 +16,7 @@ class DrfMessagesSettings:
 
     @classmethod
     def build_settings(cls):
+        """Constructor from django settings"""
         return cls(**{
             f.name: getattr(settings, f.name)
             for f in fields(cls)
@@ -23,6 +24,11 @@ class DrfMessagesSettings:
         })
 
     def update_setting(self, name: str, value) -> None:
+        """
+        Update individual setting
+        :param name: Name of setting to update
+        :param value: New value for the setting
+        """
         self.__setattr__(name, value)
 
 
@@ -31,7 +37,7 @@ if settings.configured:
 
 
 @receiver(setting_changed)
-def _update_setting(sender=None, setting=None, value=None, enter=None, **kwargs):
+def _update_setting(setting=None, value=None, **kwargs):
     if not messages_settings:
         return
 

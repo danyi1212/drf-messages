@@ -10,12 +10,12 @@ from drf_messages.models import Message
 class DBStorage(BaseStorage):
     """
     Message storage backend to persistent messages storage in the database, with relation to the request's session.
-    When no session is provided, it fallbacks to a temporary storage in memory.
+    When no session is provided, fallbacks to a temporary storage in memory.
     """
 
     def __init__(self, request, *args, **kwargs):
         super(DBStorage, self).__init__(request, *args, **kwargs)
-        # fallback to non persistent message storage when no session is available
+        # fallback to non-persistent message storage when no session is available
         if messages_settings.MESSAGES_USE_SESSIONS:
             self._fallback = not bool(hasattr(request, "session") and request.session.session_key)
         else:

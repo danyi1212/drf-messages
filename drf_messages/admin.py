@@ -27,4 +27,3 @@ class MessageAdmin(admin.ModelAdmin):
     readonly_fields = ("session", "created")
 
     inlines = (MessageTagInline,)
-
