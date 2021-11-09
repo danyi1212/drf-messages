@@ -148,12 +148,12 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console',],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
         'drf_messages': {
-            'handlers': ['console',],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'formatter': 'simple',
             'propagate': True,
@@ -194,4 +194,3 @@ INTERNAL_IPS = [
 ]
 
 MESSAGE_STORAGE = "drf_messages.storage.DBStorage"
-MESSAGES_USE_SESSIONS = True
