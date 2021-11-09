@@ -5,15 +5,24 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v2
-    - uses: ricardochaves/python-lint@v1.4.0
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
       with:
-        python-root-list: "drf_messages testproj"
-        use-pylint: true
-        use-pycodestyle: true
-        use-flake8: true
-        use-black: true
-        use-mypy: true
-        use-isort: true
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint pylint-django
+    - name: Analysing drf_messages with pylint
+      run: |
+        pylint drf_messages --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations
+    - name: Analysing test porject with pylint
+      run: |
+        pylint testproj/* --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations --django-settings=testproj.settings
+    -
+
