@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from drf_messages import logger
-from drf_messages.conf import MESSAGES_USE_SESSIONS
+from drf_messages.conf import messages_settings
 
 
 class MessageQuerySet(models.QuerySet):
@@ -52,7 +52,7 @@ class MessageManager(models.Manager):
         queryset = MessageQuerySet(self.model, using=self._db, request_context=request).filter(
             user=request.user if hasattr(request, "user") and request.user.is_authenticated else None
         )
-        if MESSAGES_USE_SESSIONS:
+        if messages_settings.MESSAGES_USE_SESSIONS:
             return queryset.filter(Q(session__session_key=request.session.session_key) | Q(session__isnull=True))
         else:
             return queryset
