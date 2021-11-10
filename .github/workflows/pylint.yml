@@ -24,5 +24,3 @@ jobs:
     - name: Analysing test porject with pylint
       run: |
         pylint testproj/* --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations --django-settings=testproj.settings
-    -
-
