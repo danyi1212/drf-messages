@@ -5,19 +5,14 @@ on: [ pull_request ]
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint pylint-django django
+        pip install pylint pylint-django django djangorestframework -r ./testproj/requirements.txt
     - name: Analysing drf_messages with pylint
       run: |
         pylint drf_messages --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations
