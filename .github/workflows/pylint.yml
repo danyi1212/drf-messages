@@ -1,0 +1,22 @@
+name: Pylint
+
+on: [ pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+    - name: Install dependencies
+      working-directory: ./testproj
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint pylint-django django djangorestframework -r requirements-github.txt
+    - name: Analysing drf_messages with pylint
+      run: |
+        pylint drf_messages --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations
+    - name: Analysing test project with pylint
+      run: |
+        pylint testproj/* --load-plugins pylint_django --load-plugins pylint_django.checkers.migrations --django-settings-module=testproj.settings

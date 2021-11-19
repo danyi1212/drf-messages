@@ -23,11 +23,11 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-schema_view = get_schema_view(
+SchemaView = get_schema_view(
     openapi.Info(
-        title="Superb API",
+        title="Messages API",
         default_version='v1',
-        description=Path('./description.md').read_text(),
+        description=Path('./description.md').read_text(encoding="utf-8"),
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email=""),
         license=openapi.License(name="BSD License"),
@@ -38,8 +38,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('', RedirectView.as_view(url=reverse_lazy("schema-swagger-ui"), permanent=True)),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger/', SchemaView.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', SchemaView.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('admin/', admin.site.urls),
     path('admin/doc/', include('django.contrib.admindocs.urls')),
@@ -49,4 +49,3 @@ urlpatterns = [
     path('demo/', include('demo.urls')),
     path('messages/', include('drf_messages.urls')),
 ]
-

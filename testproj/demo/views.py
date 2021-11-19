@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring
 from django.contrib import messages
 from django.shortcuts import render
 from rest_framework.decorators import api_view

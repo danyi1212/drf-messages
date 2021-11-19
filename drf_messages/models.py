@@ -19,9 +19,9 @@ class MessageQuerySet(models.QuerySet):
 
     def _clone(self):
         # pass request context on clone
-        c = super(MessageQuerySet, self)._clone()
-        c.request_context = self.request_context
-        return c
+        clone = super(MessageQuerySet, self)._clone()
+        clone.request_context = self.request_context
+        return clone
 
     def mark_read(self):
         """
@@ -154,7 +154,8 @@ class Message(models.Model):
         ordering = ["-created"]
 
     @cached_property
-    def level_tag(self):
+    def level_tag(self) -> str:
+        """Message level as text"""
         return LEVEL_TAGS.get(self.level, '')
 
     def __str__(self):
