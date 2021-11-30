@@ -2,7 +2,7 @@
 from django.contrib.messages import get_messages
 from django.contrib.messages.storage.base import LEVEL_TAGS
 from django.db.models import Count, Max
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -40,7 +40,7 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
         :exception ValueError: Messages storage is not configured properly.
         """
         messages: DBStorage = get_messages(self.request)
-        if isinstance(messages, list):
+        if not isinstance(messages, DBStorage):
             raise ValueError("\"drf_messages\" is not installed properly. "
                              "Make sure MESSAGE_STORAGE is set to \"drf_messages.storage.DBStorage\"")
 
@@ -50,12 +50,24 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
         super(MessagesViewSet, self).check_object_permissions(request, obj)
         # restrict deletion of unread messages.
         if not messages_settings.MESSAGES_ALLOW_DELETE_UNREAD and self.action == "destroy" and obj.read_at is None:
-            raise PermissionDenied("Unread messages cannot be deleted.")
+            raise PermissionDenied("You do not have the permission to delete unread messages")
 
     def list(self, request, *args, **kwargs):
         response = super(MessagesViewSet, self).list(request, *args, **kwargs)
-        # update last read
-        self.get_queryset().mark_read()
+        # update read at
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            queryset.filter(pk__in=map(lambda x: x.pk, page)).mark_read()
+        else:
+            queryset.mark_read()
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super(MessagesViewSet, self).retrieve(request, *args, **kwargs)
+        # update read at
+        self.get_object().mark_read(self.request)
         return response
 
     @action(methods=["GET"], detail=False, description="Get unread messages count and level without reading them.",
@@ -72,4 +84,4 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
             **summary,
             "max_level_tag": LEVEL_TAGS.get(summary.get("max_level"), '')
         })
-        return Response(serializer.data, 200)
+        return Response(serializer.data, status.HTTP_200_OK)
