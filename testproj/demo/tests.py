@@ -1,4 +1,4 @@
-# pylint: disable=imported-auth-user, missing-function-docstring
+# pylint: disable=missing-function-docstring, protected-access, no-member, not-context-manager
 from django.contrib import messages
 from django.contrib.messages import get_messages, set_level
 from django.contrib.messages.storage.base import Message as DjangoMessage
@@ -10,6 +10,7 @@ from rest_framework.test import APITestCase
 from demo.factories import MessageFactory
 from demo.user_factories import UserFactory
 from drf_messages.models import Message
+from drf_messages.storage import DBStorage
 
 
 class MessageDRFViewsTests(APITestCase):
@@ -148,9 +149,9 @@ class MessageTestCase(TransactionTestCase):
         with self.assertLogs('drf_messages', level="DEBUG") as logs:
             messages.info(self.request, "Hello world!")
             self.assertEqual(Message.objects.count(), 0)
-            self.assertEquals(logs.records[0].levelname, "DEBUG")
-            self.assertEquals(logs.records[0].module, "storage")
-            self.assertEquals(
+            self.assertEqual(logs.records[0].levelname, "DEBUG")
+            self.assertEqual(logs.records[0].module, "storage")
+            self.assertEqual(
                 logs.records[0].message,
                 'Skip message creation due to the level being too low (level=20 / min=30).',
             )
@@ -169,13 +170,13 @@ class MessageTestCase(TransactionTestCase):
         with self.assertLogs('drf_messages', level="DEBUG") as logs:
             messages.info(self.request, "")
             self.assertEqual(Message.objects.count(), 0)
-            self.assertEquals(logs.records[0].levelname, "DEBUG")
-            self.assertEquals(logs.records[0].module, "storage")
-            self.assertEquals(logs.records[0].message, "Skip message creation due to an empty string. (message='')")
+            self.assertEqual(logs.records[0].levelname, "DEBUG")
+            self.assertEqual(logs.records[0].module, "storage")
+            self.assertEqual(logs.records[0].message, "Skip message creation due to an empty string. (message='')")
 
     def test_extra_tags(self):
         messages.info(self.request, "Hello world", extra_tags=["test1", "test2"])
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         message = list(storage)[0]
         self.assertEqual(message.extra_tags, "test1 test2")
 
@@ -194,10 +195,10 @@ class StorageTestCase(TestCase):
         self.request = self.response.wsgi_request
 
         self.alt_client.force_login(self.user)
-        
+
     def test_inside_template(self):
         response = self.client.get(reverse("demo:index"))
-        storage = get_messages(response.wsgi_request)
+        storage: DBStorage = get_messages(response.wsgi_request)
         self.assertContains(response, "Hello world!")
         self.assertFalse(storage)
         self.assertTrue(storage.used)
@@ -208,7 +209,7 @@ class StorageTestCase(TestCase):
         session_key = self.client.session.session_key
         self.assertEqual(Message.objects.filter(session__session_key=session_key).count(), 1)
         # check through storage
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertEqual(len(storage), 1)
         # check through API
         response = self.client.get(reverse("drf_messages:messages-list"))
@@ -225,7 +226,7 @@ class StorageTestCase(TestCase):
         session_key = self.alt_client.session.session_key
         self.assertEqual(Message.objects.filter(session__session_key=session_key).count(), 0)
         # check storage for different session
-        alt_storage = get_messages(response.wsgi_request)
+        alt_storage: DBStorage = get_messages(response.wsgi_request)
         alt_storage.get_queryset().update(read_at=None)  # unread all messages
         self.assertEqual(len(alt_storage), 0)
         self.assertFalse(alt_storage)
@@ -237,13 +238,13 @@ class StorageTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=response.data)
         self.assertEqual(len(response.data.get("results")), 1)
         # check storage for different session
-        alt_storage = get_messages(response.wsgi_request)
+        alt_storage: DBStorage = get_messages(response.wsgi_request)
         alt_storage.get_queryset().update(read_at=None)  # unread all messages
         self.assertEqual(len(alt_storage), 1)
         self.assertTrue(alt_storage)
-        
+
     def test_iteration(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         for message in storage:
             self.assertTrue(isinstance(message, DjangoMessage))
 
@@ -256,18 +257,18 @@ class StorageTestCase(TestCase):
             self.assertEqual(storage.get_queryset().count(), 1)
 
         # check all messages marked read
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertEqual(storage.get_unread_queryset().count(), 0)
 
     def test_print_messages(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertEqual(repr(storage), str(["Hello world!"]))
         self.assertFalse(storage.used)
 
     @override_settings(MESSAGES_USE_SESSIONS=False)
     def test_slicing(self):
         Message.objects.bulk_create(MessageFactory.build(user=self.user) for _ in range(9))
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertEqual(len(storage), 10)
         self.assertEqual(len(storage[:5]), 5)
         self.assertEqual(len(storage), 5, msg="Messages not marked as read after slicing")
@@ -275,7 +276,7 @@ class StorageTestCase(TestCase):
 
     def test_contains(self):
         message = Message.objects.get(user=self.user)
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertTrue(message.get_django_message() in storage)
         self.assertFalse(storage.used)
 
@@ -304,41 +305,40 @@ class StorageFallbackTestCase(TestCase):
         client = self.client_class()
         self.response = client.get(reverse('demo:index'))
         self.request = self.response.wsgi_request
-        self.session_key = self.client.session.session_key
         self.assertFalse(hasattr(self.request, "session"))
 
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertTrue(storage._fallback)
         self.assertEqual(len(storage), 1)
         self.assertTrue(storage)
         self.assertEqual(storage.get_queryset().count(), 0)
 
     def test_inside_template(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertTrue(storage._fallback)
         self.assertContains(self.response, storage[0].message)
 
     @override_settings(MESSAGES_USE_SESSIONS=False)
     def test_without_sessions(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertTrue(storage._fallback)
         self.assertEqual(len(storage), 1)
         self.assertTrue(storage)
         self.assertEqual(storage.get_queryset().count(), 0)
 
     def test_iteration(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         for message in storage:
             self.assertTrue(isinstance(message, DjangoMessage))
 
         self.assertTrue(storage.used)
 
     def test_contains(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertTrue(storage[0] in storage)
 
     def test_print_messages(self):
-        storage = get_messages(self.request)
+        storage: DBStorage = get_messages(self.request)
         self.assertEqual(repr(storage), str(["Hello world!"]))
         self.assertFalse(storage.used)
 
@@ -382,7 +382,7 @@ class MessageModelTestCase(TestCase):
             Message.objects.with_context(self.request).mark_read()
             self.message.mark_read(self.request)
 
-        self.assertEquals(len(logs.records), 2)
+        self.assertEqual(len(logs.records), 2)
         for entry in logs.records:
             self.assertEqual(entry.levelname, "ERROR")
             self.assertTrue("django.contrib.messages.middleware.MessageMiddleware" in entry.message)
