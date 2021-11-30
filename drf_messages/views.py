@@ -64,10 +64,10 @@ class MessagesViewSet(viewsets.mixins.ListModelMixin,
             queryset.mark_read()
         return response
 
-    def retrieve(self, request, *args, pk=None, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         response = super(MessagesViewSet, self).retrieve(request, *args, **kwargs)
         # update read at
-        self.get_queryset().filter(pk=pk).mark_read()
+        self.get_object().mark_read(self.request)
         return response
 
     @action(methods=["GET"], detail=False, description="Get unread messages count and level without reading them.",
