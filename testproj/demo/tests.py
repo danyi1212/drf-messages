@@ -177,7 +177,7 @@ class MessageTestCase(TransactionTestCase):
         messages.info(self.request, "Hello world", extra_tags=["test1", "test2"])
         storage = get_messages(self.request)
         message = list(storage)[0]
-        self.assertEqual(message.extra_tags, "['test1', 'test2']")
+        self.assertEqual(message.extra_tags, "test1 test2")
 
 
 class StorageTestCase(TestCase):
