@@ -142,4 +142,3 @@ class DBStorage(BaseStorage):
             return ", ".join(m.message for m in self._queued_messages)
         else:
             return ", ".join(self.get_unread_queryset().values_list("message", flat=True))
-

@@ -301,10 +301,10 @@ class StorageTestCase(TestCase):
 
     def test_contains_invalid_type(self):
         storage: DBStorage = get_messages(self.request)
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError) as manager:
             self.assertFalse([] in storage)
 
-        self.assertTrue("list" in str(cm.exception))
+        self.assertTrue("list" in str(manager.exception))
         self.assertFalse(storage.used)
 
 
@@ -395,10 +395,10 @@ class StorageFallbackTestCase(TestCase):
 
     def test_contains_invalid_type(self):
         storage: DBStorage = get_messages(self.request)
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError) as manager:
             self.assertFalse([] in storage)
 
-        self.assertTrue("list" in str(cm.exception))
+        self.assertTrue("list" in str(manager.exception))
         self.assertFalse(storage.used)
 
 
