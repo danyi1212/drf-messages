@@ -1,6 +1,9 @@
+from typing import Sequence, Union
+
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
-from django.contrib.messages.storage.base import LEVEL_TAGS
+from django.contrib.messages.storage.base import LEVEL_TAGS, BaseStorage
+from django.contrib.messages.storage.base import Message as DjangoMessage
 from django.contrib.sessions.models import Session
 from django.db import models
 from django.db.models import Q
@@ -8,7 +11,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from drf_messages import logger
-from drf_messages.conf import MESSAGES_USE_SESSIONS
+from drf_messages.conf import messages_settings
 
 
 class MessageQuerySet(models.QuerySet):
@@ -19,9 +22,9 @@ class MessageQuerySet(models.QuerySet):
 
     def _clone(self):
         # pass request context on clone
-        c = super(MessageQuerySet, self)._clone()
-        c.request_context = self.request_context
-        return c
+        clone = super(MessageQuerySet, self)._clone()
+        clone.request_context = self.request_context
+        return clone
 
     def mark_read(self):
         """
@@ -33,11 +36,11 @@ class MessageQuerySet(models.QuerySet):
         logger.debug(f"Marked {result} messages as read for session {self.request_context.session.session_key}")
         if result > 0 and self.request_context:
             storage = get_messages(self.request_context)
-            if storage is not None:
+            if isinstance(storage, BaseStorage):
                 storage.used = True
             else:
-                logger.warning("Message storage is None. Make sure to include "
-                               "\"'django.contrib.messages.middleware.MessageMiddleware'\" in the MIDDLEWARE setting.")
+                logger.error("Message storage is None. Make sure to include "
+                             "\"django.contrib.messages.middleware.MessageMiddleware\" in the MIDDLEWARE setting.")
         return result
 
 
@@ -52,7 +55,7 @@ class MessageManager(models.Manager):
         queryset = MessageQuerySet(self.model, using=self._db, request_context=request).filter(
             user=request.user if hasattr(request, "user") and request.user.is_authenticated else None
         )
-        if MESSAGES_USE_SESSIONS:
+        if messages_settings.MESSAGES_USE_SESSIONS and hasattr(request, "session"):
             return queryset.filter(Q(session__session_key=request.session.session_key) | Q(session__isnull=True))
         else:
             return queryset
@@ -66,7 +69,7 @@ class MessageManager(models.Manager):
         """
         if isinstance(extra_tags, (list, tuple, set)):
             MessageTag.objects.bulk_create((
-                MessageTag(message=message, text=tag)
+                MessageTag(message=message, text=str(tag))
                 for tag in extra_tags
             ))
         else:
@@ -154,8 +157,50 @@ class Message(models.Model):
         ordering = ["-created"]
 
     @cached_property
-    def level_tag(self):
+    def level_tag(self) -> str:
+        """Message level as text"""
         return LEVEL_TAGS.get(self.level, '')
+
+    def mark_read(self, request) -> None:
+        """
+        Mark as read now.
+        """
+        # mark that messages have been read from the request
+        self.read_at = timezone.now()
+        self.save()
+        logger.debug(f"Marked 1 message as read for session {request.session.session_key}")
+        storage = get_messages(request)
+        if isinstance(storage, BaseStorage):
+            storage.used = True
+        else:
+            logger.error("Message storage is None. Make sure to include "
+                         "\"django.contrib.messages.middleware.MessageMiddleware\" in the MIDDLEWARE setting.")
+
+    def get_django_message(self) -> DjangoMessage:
+        """
+        Parse drf_messages message to django message format.
+        :return: django.contrib.messages.storage.base.Message instance
+        """
+        return DjangoMessage(
+            message=self.message,
+            level=self.level,
+            extra_tags=" ".join(self.extra_tags.values_list("text", flat=True))
+        )
+
+    def add_tag(self, text: Union[str, Sequence[str]]) -> None:
+        """
+        Add extra tags to message.
+        :param text: string or sequence of strings (e.g. add_tag(f"tag {i}" for i in range(10)))
+        """
+        if isinstance(text, str):
+            MessageTag.objects.create(text=text, message=self)
+        else:
+            MessageTag.objects.bulk_create(
+                MessageTag(
+                    text=t,
+                    message=self,
+                ) for t in text
+            )
 
     def __str__(self):
         return self.message

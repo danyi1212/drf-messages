@@ -1,0 +1,14 @@
+[MASTER]
+ignore=static,templates
+ignore-patterns=.+\.md, .+\.txt, .+\.ini,
+disable=C0114, django-not-configured, super-with-arguments, logging-fstring-interpolation, too-many-arguments,
+    missing-class-docstring, no-else-return, no-self-use, unnecessary-lambda, too-many-ancestors
+
+[BASIC]
+good-names=default_app_config,logger,MESSAGES_ALLOW_DELETE_UNREAD,MESSAGES_DELETE_READ,MESSAGES_USE_SESSIONS
+
+[TYPECHECK]
+ignored-classes=WSGIRequest
+
+[FORMAT]
+max-line-length=120

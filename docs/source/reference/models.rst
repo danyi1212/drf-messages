@@ -20,6 +20,11 @@ Properties:
 
 :level_tag: String, describing the level of the message
 
+Methods:
+
+:add_tag: Add extra tag (or multiple tags)
+:mark_read: Mark message as read now
+:get_django_message: Parse message to django message object (``django.contrib.messages.storage.base.Message``)
 
 MessageTag
 ----------
