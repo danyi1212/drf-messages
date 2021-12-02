@@ -3,4 +3,3 @@ drf-yasg
 django-debug-toolbar
 django-filter
 factory-boy
-pytz
