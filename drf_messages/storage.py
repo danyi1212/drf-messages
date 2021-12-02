@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.contrib.messages.storage.base import Message as DjangoMessage, BaseStorage
 
 from drf_messages import logger
@@ -63,11 +65,24 @@ class DBStorage(BaseStorage):
                 for message in qs_slice
             ]
 
-    def __contains__(self, item: DjangoMessage):
-        if self._fallback:
-            return item in self._queued_messages
+    def __contains__(self, item: Union[str, int, DjangoMessage]):
+        if isinstance(item, str):
+            if self._fallback:
+                return any(item == m.message for m in self._queued_messages)
+            else:
+                return self.get_unread_queryset().filter(message=item).exists()
+        elif isinstance(item, int):
+            if self._fallback:
+                return any(item == m.level for m in self._queued_messages)
+            else:
+                return self.get_unread_queryset().filter(level=item).exists()
+        elif isinstance(item, DjangoMessage):
+            if self._fallback:
+                return item in self._queued_messages
+            else:
+                return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
         else:
-            return self.get_unread_queryset().filter(message=item.message, level=item.level).exists()
+            raise ValueError(f"Unsupported \"in\" condition with type {type(item)} in DBStorage")
 
     def __len__(self):
         if self._fallback:
@@ -116,9 +131,14 @@ class DBStorage(BaseStorage):
             logger.info(f"Cleared {count} messages for session {self.request.session}")
 
     def __str__(self):
-        messages = [m.message for m in self]
-        self.used = False
-        return str(messages)
+        results = self.__repr__()
+        self.used = True
+        if not self._fallback:
+            self.get_unread_queryset().mark_read()
+        return results
 
     def __repr__(self):
-        return self.__str__()
+        if self._fallback:
+            return ", ".join(m.message for m in self._queued_messages)
+        else:
+            return ", ".join(self.get_unread_queryset().values_list("message", flat=True))
