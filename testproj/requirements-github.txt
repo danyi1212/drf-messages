@@ -1,5 +1,6 @@
 -e ..
-drf-yasg==1.20.0
-django-debug-toolbar==3.2.1
-django-filter==2.4.0
-factory-boy==3.2.1
+drf-yasg
+django-debug-toolbar
+django-filter
+factory-boy
+pytz
