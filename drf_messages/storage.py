@@ -131,9 +131,15 @@ class DBStorage(BaseStorage):
             logger.info(f"Cleared {count} messages for session {self.request.session}")
 
     def __str__(self):
-        messages = [m.message for m in self]
-        self.used = False
-        return str(messages)
+        results = self.__repr__()
+        self.used = True
+        if not self._fallback:
+            self.get_unread_queryset().mark_read()
+        return results
 
     def __repr__(self):
-        return self.__str__()
+        if self._fallback:
+            return ", ".join(m.message for m in self._queued_messages)
+        else:
+            return ", ".join(self.get_unread_queryset().values_list("message", flat=True))
+

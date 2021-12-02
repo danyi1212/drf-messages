@@ -260,10 +260,17 @@ class StorageTestCase(TestCase):
         storage: DBStorage = get_messages(self.request)
         self.assertEqual(storage.get_unread_queryset().count(), 0)
 
-    def test_print_messages(self):
+    def test_string(self):
+        Message.objects.bulk_create(MessageFactory.build(user=self.user) for _ in range(3))
+        expected_str = ", ".join(Message.objects.values_list("message", flat=True))
         storage: DBStorage = get_messages(self.request)
-        self.assertEqual(repr(storage), str(["Hello world!"]))
+        self.assertEqual(repr(storage), expected_str)
+        self.assertTrue(storage, msg="Messages marked as read after __repr__")
         self.assertFalse(storage.used)
+
+        self.assertEqual(str(storage), expected_str)
+        self.assertFalse(storage, msg="Messages marked not as read after __str__")
+        self.assertTrue(storage.used)
 
     @override_settings(MESSAGES_USE_SESSIONS=False)
     def test_slicing(self):
@@ -353,10 +360,20 @@ class StorageFallbackTestCase(TestCase):
 
         self.assertTrue(storage.used)
 
-    def test_print_messages(self):
+    def test_string(self):
+        message_list = ["Hello world!"]
+        for _ in range(3):
+            message = MessageFactory(user=self.user)
+            messages.add_message(self.request, message.level, message.message, extra_tags=message.extra_tags)
+            message_list.append(message.message)
+
+        expected_str = ", ".join(message_list)
         storage: DBStorage = get_messages(self.request)
-        self.assertEqual(repr(storage), str(["Hello world!"]))
+        self.assertEqual(repr(storage), expected_str)
         self.assertFalse(storage.used)
+
+        self.assertEqual(str(storage), expected_str)
+        self.assertTrue(storage.used)
 
     def test_contains_message_obj(self):
         storage: DBStorage = get_messages(self.request)
