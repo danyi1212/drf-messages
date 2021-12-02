@@ -148,6 +148,20 @@ Another classic way is iterating over the messages storage:
 .. note::
     When using the traditional interface specified above, all messages will be **marked as read** immediately.
 
+The storage object behaves almost like any other collection. You can get message at a **specific index**, **slice** it,
+check its **length**, etc. See more in the reference for :doc:`../reference/storage`.
+
+.. code-block:: python
+
+    from django.contrib.messages import get_messages
+
+    storage = get_messages(request)
+    first_five_messages = storage[:5]
+    if storage:
+        message = storage[0]
+
+
+
 Alternatively, this module provides a **QuerySet access** to the messages.
 
 It includes **extra information** in the messages, like ``created``, ``read_at`` and ``view`` to specify the creation time,

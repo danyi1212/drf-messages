@@ -260,10 +260,17 @@ class StorageTestCase(TestCase):
         storage: DBStorage = get_messages(self.request)
         self.assertEqual(storage.get_unread_queryset().count(), 0)
 
-    def test_print_messages(self):
+    def test_string(self):
+        Message.objects.bulk_create(MessageFactory.build(user=self.user) for _ in range(3))
+        expected_str = ", ".join(Message.objects.values_list("message", flat=True))
         storage: DBStorage = get_messages(self.request)
-        self.assertEqual(repr(storage), str(["Hello world!"]))
+        self.assertEqual(repr(storage), expected_str)
+        self.assertTrue(storage, msg="Messages marked as read after __repr__")
         self.assertFalse(storage.used)
+
+        self.assertEqual(str(storage), expected_str)
+        self.assertFalse(storage, msg="Messages marked not as read after __str__")
+        self.assertTrue(storage.used)
 
     @override_settings(MESSAGES_USE_SESSIONS=False)
     def test_slicing(self):
@@ -274,10 +281,30 @@ class StorageTestCase(TestCase):
         self.assertEqual(len(storage), 5, msg="Messages not marked as read after slicing")
         self.assertTrue(storage.used)
 
-    def test_contains(self):
+    def test_contains_message_obj(self):
         message = Message.objects.get(user=self.user)
         storage: DBStorage = get_messages(self.request)
         self.assertTrue(message.get_django_message() in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_message_str(self):
+        storage: DBStorage = get_messages(self.request)
+        self.assertTrue("Hello world!" in storage)
+        self.assertFalse("Goodbye world!" in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_level(self):
+        storage: DBStorage = get_messages(self.request)
+        self.assertTrue(messages.INFO in storage)
+        self.assertFalse(messages.WARNING in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_invalid_type(self):
+        storage: DBStorage = get_messages(self.request)
+        with self.assertRaises(ValueError) as manager:
+            self.assertFalse([] in storage)
+
+        self.assertTrue("list" in str(manager.exception))
         self.assertFalse(storage.used)
 
 
@@ -290,7 +317,7 @@ class StorageFallbackTestCase(TestCase):
         cls.anon_client = cls.client_class()
 
     def setUp(self):
-        self.response = self.anon_client.get(reverse('demo:index'))
+        self.response = self.anon_client.get(reverse('demo:test'))
         self.request = self.response.wsgi_request
 
         self.alt_client.force_login(self.user)
@@ -333,13 +360,45 @@ class StorageFallbackTestCase(TestCase):
 
         self.assertTrue(storage.used)
 
-    def test_contains(self):
-        storage: DBStorage = get_messages(self.request)
-        self.assertTrue(storage[0] in storage)
+    def test_string(self):
+        message_list = ["Hello world!"]
+        for _ in range(3):
+            message = MessageFactory(user=self.user)
+            messages.add_message(self.request, message.level, message.message, extra_tags=message.extra_tags)
+            message_list.append(message.message)
 
-    def test_print_messages(self):
+        expected_str = ", ".join(message_list)
         storage: DBStorage = get_messages(self.request)
-        self.assertEqual(repr(storage), str(["Hello world!"]))
+        self.assertEqual(repr(storage), expected_str)
+        self.assertFalse(storage.used)
+
+        self.assertEqual(str(storage), expected_str)
+        self.assertTrue(storage.used)
+
+    def test_contains_message_obj(self):
+        storage: DBStorage = get_messages(self.request)
+        message = storage._queued_messages[0]
+        self.assertTrue(message in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_message_str(self):
+        storage: DBStorage = get_messages(self.request)
+        self.assertTrue("Hello world!" in storage)
+        self.assertFalse("Goodbye world!" in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_level(self):
+        storage: DBStorage = get_messages(self.request)
+        self.assertTrue(messages.INFO in storage)
+        self.assertFalse(messages.WARNING in storage)
+        self.assertFalse(storage.used)
+
+    def test_contains_invalid_type(self):
+        storage: DBStorage = get_messages(self.request)
+        with self.assertRaises(ValueError) as manager:
+            self.assertFalse([] in storage)
+
+        self.assertTrue("list" in str(manager.exception))
         self.assertFalse(storage.used)
 
 
