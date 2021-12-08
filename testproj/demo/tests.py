@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, protected-access, no-member, not-context-manager
 from typing import Tuple, List
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages import get_messages, set_level
 from django.contrib.messages.storage.base import Message as DjangoMessage
@@ -15,7 +14,6 @@ from demo.factories import MessageFactory
 from demo.user_factories import UserFactory
 from drf_messages.models import Message
 from drf_messages.storage import DBStorage
-from drf_messages.conf import messages_settings
 
 
 class MessageDRFViewsTests(APITestCase):
