@@ -1,7 +1,11 @@
 # pylint: disable=missing-function-docstring, protected-access, no-member, not-context-manager
+from typing import Tuple, List
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages import get_messages, set_level
 from django.contrib.messages.storage.base import Message as DjangoMessage
+from django.db.models import F
 from django.test import override_settings, modify_settings, TestCase, TransactionTestCase
 from django.urls import reverse
 from rest_framework import status
@@ -11,6 +15,7 @@ from demo.factories import MessageFactory
 from demo.user_factories import UserFactory
 from drf_messages.models import Message
 from drf_messages.storage import DBStorage
+from drf_messages.conf import messages_settings
 
 
 class MessageDRFViewsTests(APITestCase):
@@ -207,6 +212,7 @@ class StorageTestCase(TestCase):
     def test_first_session(self):
         # check from database
         session_key = self.client.session.session_key
+        self.assertEqual(Message.objects.filter(session_key=session_key).count(), 1)
         self.assertEqual(Message.objects.filter(session__session_key=session_key).count(), 1)
         # check through storage
         storage: DBStorage = get_messages(self.request)
@@ -224,6 +230,7 @@ class StorageTestCase(TestCase):
         self.assertEqual(len(response.data.get("results")), 0)
         # check from database using different session
         session_key = self.alt_client.session.session_key
+        self.assertEqual(Message.objects.filter(session_key=session_key).count(), 0)
         self.assertEqual(Message.objects.filter(session__session_key=session_key).count(), 0)
         # check storage for different session
         alt_storage: DBStorage = get_messages(response.wsgi_request)
@@ -402,7 +409,7 @@ class StorageFallbackTestCase(TestCase):
         self.assertFalse(storage.used)
 
 
-class MessageModelTestCase(TestCase):
+class MessageModelTestCase(TransactionTestCase):
 
     def setUp(self):
         self.user = UserFactory()
@@ -416,10 +423,12 @@ class MessageModelTestCase(TestCase):
         self.assertEqual(self.message.view, "demo:index")
 
     def test_message_session(self):
+        self.assertEqual(Message.objects.filter(session_key=self.session_key).count(), 1)
         self.assertEqual(Message.objects.filter(session__session_key=self.session_key).count(), 1)
 
     def test_session_clear_on_logout(self):
         self.client.logout()
+        self.assertEqual(Message.objects.filter(session_key=self.session_key).count(), 0)
         self.assertEqual(Message.objects.filter(session__session_key=self.session_key).count(), 0)
         self.client.force_login(self.user)
 
@@ -458,3 +467,42 @@ class MessageModelTestCase(TestCase):
         django_message = self.message.get_django_message()
         self.assertEqual(django_message.extra_tags, "test tag0 tag1 tag2")
         self.assertEqual(django_message.tags, "test tag0 tag1 tag2 info")
+
+
+class SessionEngineTestCase(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+    def subtest_message_with_session_engine(self, session_key_count: int, session_obj_count: int):
+        client = self.client_class()  # recreate SessionMiddleware to refresh engine
+        client.force_login(self.user)  # login to create session
+        self.assertTrue(client.session.session_key, msg="Failed to log in using session engine")
+        response = client.get(reverse('demo:test'))
+        session_key = response.wsgi_request.session.session_key
+        self.assertEqual(Message.objects.filter(session_key=session_key).count(), session_key_count,
+                         msg="Session key was not set correctly")
+        self.assertEqual(Message.objects.filter(session__isnull=True).count(), session_key_count - session_obj_count,
+                         msg="Session relation was not set correctly")
+        self.assertEqual(Message.objects.filter(session__session_key=session_key).count(), session_obj_count,
+                         msg="Session relation was not set correctly")
+        self.assertFalse(
+            Message.objects.filter(session__isnull=False).exclude(session__session_key=F("session_key")).exists(),
+            msg="Session key and session object are different",
+        )
+
+    def test_session_engines(self):
+        non_db_engines: List[Tuple[str, bool]] = [
+            ('django.contrib.sessions.backends.db', True),
+            ('django.contrib.sessions.backends.file', False),
+            ('django.contrib.sessions.backends.cache', False),
+            ('django.contrib.sessions.backends.cached_db', True),
+            ('django.contrib.sessions.backends.signed_cookies', False),
+            ('redis_sessions.session', False),
+        ]
+        for engine, is_db in non_db_engines:
+            with self.subTest(engine):
+                with self.settings(SESSION_ENGINE=engine):
+                    Message.objects.all().delete()
+                    self.subtest_message_with_session_engine(1, 1 if is_db else 0)
