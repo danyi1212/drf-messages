@@ -6,18 +6,31 @@ MESSAGES_USE_SESSIONS
 ~~~~~~~~~~~~~~~~~~~~~
 
 | Type ``bool``; Default to ``False``; Not Required.
-| Use session context to store messages.
+| Use session context to query messages.
 
-Store and query messages for current session only.
-When is set to ``True`` messages are added only to the current session, and is shown only to throughout the session.
+Query messages for current session only.
+When is set to ``True``, only messages created from the **same session** will be shown.
 
-By default, messages are stored with user context.
-That means the user can see all their messages everywhere.
+By default (``False``), messages are queried only by the **authenticated user**.
+That means the user can see all their messages from **all sessions**.
+
+Relating messages to session is different according to your configured `Session Engine <https://docs.djangoproject.com/en/dev/ref/settings/#session-engine>`_.
+For the most part, the ``session_key`` string is used to filter the query.
+When is available, the ``Session`` model object is used as `ForeignKey` and is also used to filter the query.
 
 .. note::
-    Using user context messages can **support authentication backends** other then ``SessionAuthentication``,
-    while session messages is better for showing messages **only where they are relevant** and
-    **automatic cleaning** stale messages as the session deletes on expire or logoff.
+    When using a session engine that works with db ``Session`` model, you unlock extra functionality that **automatically
+    clears out messages** after user logout or `clearsessions <https://docs.djangoproject.com/en/3.2/topics/http/sessions/#clearing-the-session-store>`_ command.
+
+Tested session engines:
+
+* ``django.contrib.sessions.backends.db`` (uses db)
+* ``django.contrib.sessions.backends.file``
+* ``django.contrib.sessions.backends.cache``
+* ``django.contrib.sessions.backends.cached_db`` (uses db)
+* ``django.contrib.sessions.backends.signed_cookies``
+* ``redis_sessions.session`` (`django-redis-sessions <https://github.com/martinrusev/django-redis-sessions>`_)
+
 
 MESSAGES_ALLOW_DELETE_UNREAD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

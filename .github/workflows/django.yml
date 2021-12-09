@@ -8,6 +8,13 @@ on:
 
 jobs:
   build:
+    services:
+      redis:
+        image: bitnami/redis:latest
+        ports:
+          - 6379:6379
+        env:
+          REDIS_PASSWORD: "password"
 
     runs-on: ubuntu-latest
     strategy:

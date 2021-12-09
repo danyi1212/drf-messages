@@ -3,3 +3,4 @@ drf-yasg
 django-debug-toolbar
 django-filter
 factory-boy
+django-redis-sessions

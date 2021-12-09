@@ -10,9 +10,11 @@ colorama==0.4.4
 coreapi==2.3.3
 coreschema==0.0.4
 coverage==6.1.1
-Django==3.2.9
+Deprecated==1.2.13
+Django==3.2.10
 django-debug-toolbar==3.2.2
 django-filter==21.1
+django-redis-sessions==0.6.2
 django-stubs-ext==0.3.1
 djangorestframework==3.12.4
 docutils==0.16
@@ -47,9 +49,11 @@ python-dateutil==2.8.2
 pytz==2020.5
 pywin32-ctypes==0.2.0
 readme-renderer==28.0
+redis==4.0.2
 requests==2.25.1
 requests-toolbelt==0.9.1
 rfc3986==1.4.0
+rstcheck==3.3.1
 ruamel.yaml==0.16.12
 ruamel.yaml.clib==0.2.2
 six==1.15.0
