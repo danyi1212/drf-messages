@@ -2,6 +2,17 @@
 Change Log
 ==========
 
+1.1.1
+-----
+
+Release date: 9 Dec, 2021
+
+- **ADDED** Support for all session engines (not only DB engine) See docs for :docs:`settings_reference`
+
+.. warning::
+    This version **requires migration** after upgrade from older version
+
+
 1.1.0
 -----
 
