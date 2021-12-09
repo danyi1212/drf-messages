@@ -56,7 +56,11 @@ class MessageManager(models.Manager):
             user=request.user if hasattr(request, "user") and request.user.is_authenticated else None
         )
         if messages_settings.MESSAGES_USE_SESSIONS and hasattr(request, "session"):
-            return queryset.filter(Q(session__session_key=request.session.session_key) | Q(session__isnull=True))
+            return queryset.filter(
+                Q(session_key=request.session.session_key)
+                | Q(session__session_key=request.session.session_key)
+                | Q(session__isnull=True)
+            )
         else:
             return queryset
 
@@ -85,14 +89,18 @@ class MessageManager(models.Manager):
         :return: Message object.
         """
         # extract session
-        if hasattr(request, "session") and request.session.session_key:
-            session = Session.objects.get(session_key=request.session.session_key)
+        if hasattr(request, "session"):
+            session_key = request.session.session_key
         else:
-            session = None
+            session_key = None
+
+        session = Session.objects.filter(session_key=session_key).first()
+
         # create message
         message_obj = self.create(
             user=request.user,
             session=session,
+            session_key=session_key,
             view=request.resolver_match.view_name if request.resolver_match else '',
             message=message,
             level=level,
@@ -141,6 +149,8 @@ class Message(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="messages")
     session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True, default=None,
                                 related_name="messages", help_text="The session where the message was submitted to.")
+    session_key = models.CharField(max_length=40, null=True, blank=True,
+                                   help_text="The session key where the message was submitted to.")
     view = models.CharField(max_length=64, blank=True, default="",
                             help_text="The view where the message was submitted from.")
 
