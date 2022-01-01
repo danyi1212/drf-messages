@@ -4,7 +4,7 @@ import django
 
 
 __title__ = "DRF Messages"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __author__ = "Dan Yishai"
 __license__ = "BSD 3-Clause"
 
