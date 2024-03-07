@@ -1,7 +1,7 @@
 
 Storage
 =======
-Storage can be access using ``django.contrib.message.get_messages`` method.
+Storage can be accessed using ``django.contrib.message.get_messages`` method.
 For example:
 
 .. code-block:: python
@@ -49,7 +49,7 @@ Attributes
 Python Access
 ~~~~~~~~~~~~~~
 
-Storage object provide many syntax based access that is similar to other **Python collections**.
+The storage object provide many syntax based access that is similar to other **Python collections**.
 All access via those interfaces is for **unread messages**, and some of them also **mark them as read**.
 
 +-------------------------------+------+---------------------------------------------------+
